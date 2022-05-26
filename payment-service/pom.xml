@@ -16,7 +16,9 @@
 	<properties>
 		<java.version>15</java.version>
 		<kotlin.version>1.6.10</kotlin.version>
+		<docker.image.name>payment-service</docker.image.name>
 	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -58,7 +60,6 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
-
 			<plugin>
 				<groupId>org.jetbrains.kotlin</groupId>
 				<artifactId>kotlin-maven-plugin</artifactId>
@@ -68,12 +69,19 @@
 					</args>
 					<compilerPlugins>
 						<plugin>spring</plugin>
+						<plugin>jpa</plugin>
 					</compilerPlugins>
+					<jvmTarget>15</jvmTarget>
 				</configuration>
 				<dependencies>
 					<dependency>
 						<groupId>org.jetbrains.kotlin</groupId>
 						<artifactId>kotlin-maven-allopen</artifactId>
+						<version>${kotlin.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>org.jetbrains.kotlin</groupId>
+						<artifactId>kotlin-maven-noarg</artifactId>
 						<version>${kotlin.version}</version>
 					</dependency>
 				</dependencies>
@@ -88,11 +96,11 @@
 					<registry>registry.hub.docker.com/igormgomes</registry>
 					<images>
 						<image>
-							<name>${artifactId}</name>
+							<name>${docker.image.name}</name>
 							<build>
-								<contextDir>${project.artifactId}</contextDir>
+								<contextDir>${project.basedir}</contextDir>
 								<tags>
-									<tag>${version}</tag>
+									<tag>${project.version}</tag>
 								</tags>
 							</build>
 						</image>
