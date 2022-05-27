@@ -1,0 +1,56 @@
+version: '3.1'
+
+services:
+
+  localstack:
+    image: localstack/localstack:latest
+    environment:
+      - EDGE_PORT=4566
+      - SERVICES=sns,sqs,dynamodb,s3
+      - DEFAULT_REGION=us-east-1
+    ports:
+      - '4566-4583:4566-4583'
+    volumes:
+      - local_stack_volume:/tmp/localstack
+      - docker_volume:/var/run/docker.sock
+    networks:
+      - aws_network
+
+  setup-resources:
+    image: mesosphere/aws-cli
+    volumes:
+      - local_stack_volume:/tmp/localstack
+      - docker_volume:/var/run/docker.sock
+      - ./folderhost:/app
+      - ./folderhost:/project
+    environment:
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=adminsecret
+      - AWS_DEFAULT_REGION=us-east-1
+    entrypoint: /bin/sh -c
+    command: >
+      "
+        # Needed so all localstack components will startup correctly (i'm sure there's a better way to do this)
+        sleep 3;
+        # DynamoDB
+        aws dynamodb create-table --table-name payment --attribute-definitions AttributeName=pk,AttributeType=S AttributeName=sk,AttributeType=S --key-schema AttributeName=pk,KeyType=HASH AttributeName=sk,KeyType=RANGE --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 --endpoint-url=http://localstack:4566;
+      "
+    networks:
+      - aws_network
+    depends_on:
+      - localstack
+
+networks:
+  aws_network:
+
+volumes:
+  local_stack_volume:
+  docker_volume:
+
+#aws sqs list-queues --endpoint-url=http://localhost:4566 --region=us-east-1
+
+#aws sns list-topics --endpoint-url=http://localhost:4566 --region=us-east-1
+
+#aws sns list-subscriptions --endpoint-url=http://localhost:4566 --region=us-east-1
+
+##docker run --rm -p

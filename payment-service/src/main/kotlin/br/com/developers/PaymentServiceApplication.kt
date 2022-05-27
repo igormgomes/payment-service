@@ -1,11 +1,11 @@
-package br.com
+package br.com.developers
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
-class AwsProject01Application
+class PaymentServiceApplication
 
 fun main(args: Array<String>) {
-	runApplication<AwsProject01Application>(*args)
+	runApplication<PaymentServiceApplication>(*args)
 }

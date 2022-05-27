@@ -1,0 +1,4 @@
+cloud:
+  aws:
+    sqs:
+      endpoint: http://localhost:4566

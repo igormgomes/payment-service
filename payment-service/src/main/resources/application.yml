@@ -1,1 +1,15 @@
+server:
+  port: 8081
 
+cloud:
+  aws:
+    stack:
+      auto: false
+    region:
+      static: us-east-1
+    sqs:
+      handler:
+        default-deletion-policy: never
+      listener:
+        auto-startup: true
+        max-number-of-messages: 10
