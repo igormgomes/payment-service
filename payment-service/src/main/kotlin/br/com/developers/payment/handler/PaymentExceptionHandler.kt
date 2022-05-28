@@ -22,9 +22,6 @@ class PaymentExceptionHandler: ResponseEntityExceptionHandler() {
         val errorMessage = ex.bindingResult.fieldErrors.map {
             ErrorMessage(it.field.plus(" ").plus(it.defaultMessage))
         }
-
-        log.error(errorMessage.toString())
-
         val errorResponse = ErrorResponse(errorMessage)
 
         return ResponseEntity(errorResponse, HttpHeaders(), HttpStatus.BAD_REQUEST)

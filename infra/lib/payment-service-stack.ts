@@ -3,10 +3,11 @@ import {Construct} from 'constructs';
 import {Cluster, ContainerImage, LogDrivers} from "aws-cdk-lib/aws-ecs";
 import {ApplicationLoadBalancedFargateService} from "aws-cdk-lib/aws-ecs-patterns";
 import {LogGroup} from "aws-cdk-lib/aws-logs";
+import {Table} from "aws-cdk-lib/aws-dynamodb";
 
 export class PaymentServiceStack extends Stack {
 
-    constructor(scope: Construct, id: string, props?: StackProps, cluster?: Cluster) {
+    constructor(scope: Construct, id: string, props?: StackProps, cluster?: Cluster, table?: Table) {
         super(scope, id, props);
 
         const paymentService = new ApplicationLoadBalancedFargateService(this, id, {
@@ -57,5 +58,7 @@ export class PaymentServiceStack extends Stack {
             exportName: 'payment-service-load-balancer',
             description: 'Payment service load balancer dns'
         })
+
+        table?.grantFullAccess(paymentService.taskDefinition.taskRole)
     }
 }

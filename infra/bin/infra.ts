@@ -4,6 +4,7 @@ import * as cdk from 'aws-cdk-lib';
 import {VpcStack} from "../lib/vpc-stack";
 import {ClusterStack} from "../lib/cluster-stack";
 import {PaymentServiceStack} from "../lib/payment-service-stack";
+import {DynamodbStack} from "../lib/dynamodb-stack";
 
 const app = new cdk.App();
 
@@ -23,4 +24,10 @@ const app = new cdk.App();
 
 const vpcStack = new VpcStack(app, 'vpc-stack')
 const clusterStack = new ClusterStack(app, 'cluster-stack', {}, vpcStack.vpc)
-new PaymentServiceStack(app, 'payment-service-stack', {}, clusterStack.cluster)
+clusterStack.addDependency(vpcStack)
+
+const dynamodbStack = new DynamodbStack(app, `dynamodb-stack`)
+
+const paymentServiceStack  = new PaymentServiceStack(app, 'payment-service-stack', {}, clusterStack.cluster, dynamodbStack.table)
+paymentServiceStack.addDependency(clusterStack)
+paymentServiceStack.addDependency(dynamodbStack)

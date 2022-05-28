@@ -2,9 +2,8 @@ package br.com.developers.payment
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.math.BigDecimal
-import java.time.Duration
-import java.time.Instant
 import java.time.LocalDate
+import java.util.UUID
 import javax.validation.constraints.DecimalMin
 import javax.validation.constraints.NotNull
 
@@ -21,12 +20,12 @@ data class PaymentRequest(
 ) {
     fun toPayment(): Payment {
         val payment = Payment()
+        payment.pk = UUID.randomUUID().toString()
         payment.sk = EventType.PROCESSED_PAYMENT.name
-        payment.date = this.date?.toString()
-        payment.value = this.value?.toString()
+        payment.date = this.date
+        payment.value = this.value
         payment.description = this.description
         payment.pixKeyCredit = this.creditRequest?.pixKey
-        payment.ttl = Instant.now().plus(Duration.ofMinutes(60)).epochSecond
         return payment
     }
 }
