@@ -1,10 +1,13 @@
 package br.com.developers.payment
 
+import br.com.developers.event.PaymentEventPublisher
+import br.com.developers.event.PaymentEventRequest
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.ArgumentCaptor
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.*
 import java.math.BigDecimal
@@ -15,12 +18,14 @@ import java.time.LocalDate
 class PaymentServiceTest {
 
     private val paymentRepository: PaymentRepository = mock()
+    private val paymentEventPublisher: PaymentEventPublisher = mock()
+    private val argumentCaptor = ArgumentCaptor.forClass(PaymentEventRequest::class.java)
 
     private lateinit var paymentService: PaymentService
 
     @BeforeEach
     fun before () {
-        this.paymentService = PaymentServiceImpl(this.paymentRepository)
+        this.paymentService = PaymentServiceImpl(this.paymentRepository, this.paymentEventPublisher)
     }
 
     @Test
@@ -48,6 +53,12 @@ class PaymentServiceTest {
         this.paymentService.save(payment)
 
         verify(this.paymentRepository, atLeastOnce()).save(eq(payment))
+        verify(this.paymentEventPublisher, atLeastOnce()).publish(this.argumentCaptor.capture())
+        assertAll("Assert payment request event", {
+            assertThat(this.argumentCaptor.value.id, `is`(equalTo(payment.pk)))
+            assertThat(this.argumentCaptor.value.eventType, `is`(equalTo(payment.sk)))
+            assertThat(this.argumentCaptor.value.pixKey, `is`(equalTo(payment.pixKeyCredit)))
+        })
     }
 
     @Test
@@ -152,6 +163,7 @@ class PaymentServiceTest {
 
         assertThat(exception.message, `is`(equalTo("Payment processed $id can't be change")))
         verify(this.paymentRepository, never()).delete(eq(payment))
+        verify(this.paymentEventPublisher, never()).publish(this.argumentCaptor.capture())
     }
 
     @Test
@@ -166,5 +178,11 @@ class PaymentServiceTest {
         this.paymentService.delete(id)
 
         verify(this.paymentRepository, atLeastOnce()).delete(eq(payment))
+        verify(this.paymentEventPublisher, atLeastOnce()).publish(this.argumentCaptor.capture())
+        assertAll("Assert payment request event", {
+            assertThat(this.argumentCaptor.value.id, `is`(equalTo(payment.pk)))
+            assertThat(this.argumentCaptor.value.eventType, `is`(equalTo(payment.sk)))
+            assertThat(this.argumentCaptor.value.pixKey, `is`(equalTo(payment.pixKeyCredit)))
+        })
     }
 }

@@ -5,6 +5,7 @@ import {VpcStack} from "../lib/vpc-stack";
 import {ClusterStack} from "../lib/cluster-stack";
 import {PaymentServiceStack} from "../lib/payment-service-stack";
 import {DynamodbStack} from "../lib/dynamodb-stack";
+import {SnsStack} from "../lib/sns-stack";
 
 const app = new cdk.App();
 
@@ -28,6 +29,9 @@ clusterStack.addDependency(vpcStack)
 
 const dynamodbStack = new DynamodbStack(app, `dynamodb-stack`)
 
-const paymentServiceStack  = new PaymentServiceStack(app, 'payment-service-stack', {}, clusterStack.cluster, dynamodbStack.table)
+const snsStack = new SnsStack(app, 'sns-stack')
+
+const paymentServiceStack  = new PaymentServiceStack(app, 'payment-service-stack', {}, clusterStack.cluster, dynamodbStack.table, snsStack.topic)
 paymentServiceStack.addDependency(clusterStack)
 paymentServiceStack.addDependency(dynamodbStack)
+paymentServiceStack.addDependency(snsStack)

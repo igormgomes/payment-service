@@ -4,11 +4,20 @@ import {Cluster, ContainerImage, LogDrivers} from "aws-cdk-lib/aws-ecs";
 import {ApplicationLoadBalancedFargateService} from "aws-cdk-lib/aws-ecs-patterns";
 import {LogGroup} from "aws-cdk-lib/aws-logs";
 import {Table} from "aws-cdk-lib/aws-dynamodb";
+import {Topic} from "aws-cdk-lib/aws-sns";
 
 export class PaymentServiceStack extends Stack {
 
-    constructor(scope: Construct, id: string, props?: StackProps, cluster?: Cluster, table?: Table) {
+    constructor(scope: Construct, id: string, props?: StackProps, cluster?: Cluster, table?: Table, topic?: Topic) {
         super(scope, id, props);
+
+        if (typeof table == 'undefined') {
+            throw 'Invalid Table'
+        }
+
+        if (typeof topic == 'undefined') {
+            throw 'Invalid Topic'
+        }
 
         const paymentService = new ApplicationLoadBalancedFargateService(this, id, {
             cluster: cluster,
@@ -19,7 +28,10 @@ export class PaymentServiceStack extends Stack {
             memoryLimitMiB: 1024,
             taskImageOptions: {
                 containerName: 'payment',
-                image: ContainerImage.fromRegistry('igormgomes/payment-service'),
+                image: ContainerImage.fromRegistry('igormgomes/payment-service:1.0.1'),
+                environment: {
+                    'PAYMENT_TOPIC_NAME': topic.topicArn,
+                },
                 containerPort: 8080,
                 logDriver: LogDrivers.awsLogs({
                     logGroup: new LogGroup(this, 'log', {
@@ -32,13 +44,13 @@ export class PaymentServiceStack extends Stack {
             publicLoadBalancer: true
         })
 
-        paymentService.targetGroup.configureHealthCheck( {
+        paymentService.targetGroup.configureHealthCheck({
             path: '/actuator/health',
             port: '8080',
             healthyHttpCodes: '200'
         })
 
-        const scalableTaskCount = paymentService.service.autoScaleTaskCount( {
+        const scalableTaskCount = paymentService.service.autoScaleTaskCount({
             minCapacity: 1,
             maxCapacity: 10
         })
@@ -59,6 +71,10 @@ export class PaymentServiceStack extends Stack {
             description: 'Payment service load balancer dns'
         })
 
-        table?.grantFullAccess(paymentService.taskDefinition.taskRole)
+
+        //paymentService.taskDefinition.taskRole.attachInlinePolicy()
+
+        table.grantFullAccess(paymentService.taskDefinition.taskRole)
+        topic.grantPublish(paymentService.taskDefinition.taskRole)
     }
 }

@@ -10,3 +10,7 @@ cloud:
       listener:
         auto-startup: true
         max-number-of-messages: 10
+
+payment:
+  topic:
+    name: ${PAYMENT_TOPIC_NAME}
