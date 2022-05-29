@@ -23,7 +23,8 @@ internal class PaymentServiceImpl(
         PaymentEventRequest(
             id = paymentSaved.pk,
             eventType = paymentSaved.sk,
-            pixKey = paymentSaved.pixKeyCredit
+            date = paymentSaved.date.toString(),
+            pixKeyCredit = paymentSaved.pixKeyCredit
         ).apply {
             paymentEventPublisher.publish(this)
         }
@@ -60,7 +61,8 @@ internal class PaymentServiceImpl(
         PaymentEventRequest(
             id = payment.pk,
             eventType = payment.sk,
-            pixKey = payment.pixKeyCredit
+            date = payment.date.toString(),
+            pixKeyCredit = payment.pixKeyCredit
         ).apply {
             paymentEventPublisher.publish(this)
         }

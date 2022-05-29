@@ -57,7 +57,7 @@ class PaymentServiceTest {
         assertAll("Assert payment request event", {
             assertThat(this.argumentCaptor.value.id, `is`(equalTo(payment.pk)))
             assertThat(this.argumentCaptor.value.eventType, `is`(equalTo(payment.sk)))
-            assertThat(this.argumentCaptor.value.pixKey, `is`(equalTo(payment.pixKeyCredit)))
+            assertThat(this.argumentCaptor.value.pixKeyCredit, `is`(equalTo(payment.pixKeyCredit)))
         })
     }
 
@@ -182,7 +182,7 @@ class PaymentServiceTest {
         assertAll("Assert payment request event", {
             assertThat(this.argumentCaptor.value.id, `is`(equalTo(payment.pk)))
             assertThat(this.argumentCaptor.value.eventType, `is`(equalTo(payment.sk)))
-            assertThat(this.argumentCaptor.value.pixKey, `is`(equalTo(payment.pixKeyCredit)))
+            assertThat(this.argumentCaptor.value.pixKeyCredit, `is`(equalTo(payment.pixKeyCredit)))
         })
     }
 }
