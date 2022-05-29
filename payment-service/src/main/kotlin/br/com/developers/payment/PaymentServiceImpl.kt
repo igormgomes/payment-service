@@ -17,16 +17,20 @@ internal class PaymentServiceImpl(private val paymentRepository: PaymentReposito
         log.info("Payment saved ${paymentSaved.pk}")
     }
 
-    override fun findAll (): List<Payment> {
+    override fun findAll(): List<Payment> {
         log.info("Finding all payments")
 
-        val payments = this.paymentRepository.findAll()
+        return paymentRepository.findAll()
             .iterator()
             .asSequence()
             .toList()
+    }
 
-        log.info("Payments found $payments")
-        return payments
+    override fun findById(id: String?): Payment {
+        checkNotNull(id)
+        log.info("Finding by $id")
+
+        return paymentRepository.findByPk(id) ?: throw PaymentNotFoundException("Payment $id not found")
     }
 
     override fun delete(id: String?) {

@@ -74,7 +74,48 @@ class PaymentServiceTest {
     }
 
     @Test
-    fun `Should test the invalid payment in the find by id`() {
+    fun `Should test the invalid id in find by id`() {
+        val exception = assertThrows<IllegalStateException> {
+            this.paymentService.findById(null)
+        }
+
+        assertThat(exception.message, `is`(equalTo("Required value was null.")))
+    }
+
+    @Test
+    fun `Should test the not found payment in find by id`() {
+        val id = "8d369a41-a278-4390-9fc8-9cd32425bf4c"
+        whenever(this.paymentRepository.findByPk(id))
+            .thenReturn(null)
+
+        val exception = assertThrows<PaymentNotFoundException> {
+            this.paymentService.findById(id)
+        }
+
+        assertThat(exception.message, `is`(equalTo("Payment $id not found")))
+    }
+
+    @Test
+    fun `Should test the find by id`() {
+        val id = "8d369a41-a278-4390-9fc8-9cd32425bf4c"
+        val paymentMock = Payment().apply {
+            this.pk = id
+            this.sk = EventType.PROCESSED_PAYMENT.name
+            this.date = LocalDate.now()
+            this.value = BigDecimal.ONE
+            this.description = "test"
+            this.pixKeyCredit = "393"
+        }
+        whenever(this.paymentRepository.findByPk(id))
+            .thenReturn(paymentMock)
+
+        val payment = this.paymentService.findById(id)
+
+        assertThat(payment.pk, `is`(equalTo(paymentMock.pk)))
+    }
+
+    @Test
+    fun `Should test the invalid id in delete`() {
         val exception = assertThrows<IllegalStateException> {
             this.paymentService.delete(null)
         }
@@ -83,7 +124,7 @@ class PaymentServiceTest {
     }
 
     @Test
-    fun `Should test the not found payment in the delete`() {
+    fun `Should test the not found payment in delete`() {
         val id = "8d369a41-a278-4390-9fc8-9cd32425bf4c"
         whenever(this.paymentRepository.findByPk(id))
             .thenReturn(null)
@@ -97,7 +138,7 @@ class PaymentServiceTest {
     }
 
     @Test
-    fun `Should test the processed payment in the delete`() {
+    fun `Should test the processed payment in delete`() {
         val id = "8d369a41-a278-4390-9fc8-9cd32425bf4c"
         val payment = Payment()
         payment.pk = id

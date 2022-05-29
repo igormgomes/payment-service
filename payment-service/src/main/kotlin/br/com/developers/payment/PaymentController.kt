@@ -1,6 +1,5 @@
 package br.com.developers.payment
 
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -21,23 +20,28 @@ class PaymentController(private val paymentService: PaymentService) {
         val payment = paymentRequest.toPayment()
         this.paymentService.save(payment)
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .location(URI.create("/api/payment/${payment.pk}"))
-            .build()
+        return ResponseEntity.created(URI.create("/api/payment/${payment.pk}"))
+            .body(payment)
     }
 
     @GetMapping
     fun findAll(): ResponseEntity<Any> {
         val payments = this.paymentService.findAll()
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(payments)
+        return ResponseEntity.ok(payments)
+    }
+
+    @GetMapping("/{id}")
+    fun findById(@PathVariable("id") id: String): ResponseEntity<Any> {
+        val payment = this.paymentService.findById(id)
+
+        return ResponseEntity.ok(payment)
     }
 
     @DeleteMapping("/{id}")
     fun delete(@PathVariable("id") id: String): ResponseEntity<Any> {
         this.paymentService.delete(id)
 
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build()
+        return ResponseEntity.noContent().build()
     }
 }

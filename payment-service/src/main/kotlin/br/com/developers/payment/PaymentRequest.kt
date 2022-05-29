@@ -5,17 +5,19 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.UUID
 import javax.validation.constraints.DecimalMin
+import javax.validation.constraints.FutureOrPresent
 import javax.validation.constraints.NotNull
 
 data class PaymentRequest(
     @field:NotNull
+    @field:FutureOrPresent
     val date: LocalDate? = null,
     @field:NotNull
     @field:DecimalMin(value = "0.01")
     val value: BigDecimal? = null,
     val description: String? = null,
     @field:NotNull
-    @JsonProperty("credit_request")
+    @JsonProperty("credit")
     val creditRequest: CreditRequest? = null
 ) {
     fun toPayment(): Payment {
