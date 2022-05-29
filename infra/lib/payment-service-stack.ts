@@ -1,23 +1,21 @@
-import {CfnOutput, Duration, RemovalPolicy, Stack, StackProps} from 'aws-cdk-lib';
+import {CfnOutput, Duration, Fn, RemovalPolicy, Stack, StackProps} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import {Cluster, ContainerImage, LogDrivers} from "aws-cdk-lib/aws-ecs";
 import {ApplicationLoadBalancedFargateService} from "aws-cdk-lib/aws-ecs-patterns";
 import {LogGroup} from "aws-cdk-lib/aws-logs";
 import {Table} from "aws-cdk-lib/aws-dynamodb";
-import {Topic} from "aws-cdk-lib/aws-sns";
+import {Policy, PolicyStatement} from 'aws-cdk-lib/aws-iam';
 
 export class PaymentServiceStack extends Stack {
 
-    constructor(scope: Construct, id: string, props?: StackProps, cluster?: Cluster, table?: Table, topic?: Topic) {
+    constructor(scope: Construct, id: string, props?: StackProps, cluster?: Cluster, table?: Table) {
         super(scope, id, props);
 
         if (typeof table == 'undefined') {
             throw 'Invalid Table'
         }
 
-        if (typeof topic == 'undefined') {
-            throw 'Invalid Topic'
-        }
+        let paymentEventTopicArn = Fn.importValue('payment-event-topic-arn');
 
         const paymentService = new ApplicationLoadBalancedFargateService(this, id, {
             cluster: cluster,
@@ -30,7 +28,7 @@ export class PaymentServiceStack extends Stack {
                 containerName: 'payment',
                 image: ContainerImage.fromRegistry('igormgomes/payment-service:1.0.1'),
                 environment: {
-                    'PAYMENT_TOPIC_NAME': topic.topicArn,
+                    'PAYMENT_TOPIC_NAME': paymentEventTopicArn,
                 },
                 containerPort: 8080,
                 logDriver: LogDrivers.awsLogs({
@@ -71,10 +69,19 @@ export class PaymentServiceStack extends Stack {
             description: 'Payment service load balancer dns'
         })
 
-
-        //paymentService.taskDefinition.taskRole.attachInlinePolicy()
+        const snsPolicyStatement = new PolicyStatement({
+            actions: [
+                'sns:*'
+            ],
+            resources: [
+                paymentEventTopicArn
+            ],
+        });
+        let snsPolicy = new Policy(this, 'sns-full-access', {
+            statements: [snsPolicyStatement],
+        });
+        paymentService.taskDefinition.taskRole.attachInlinePolicy(snsPolicy)
 
         table.grantFullAccess(paymentService.taskDefinition.taskRole)
-        topic.grantPublish(paymentService.taskDefinition.taskRole)
     }
 }

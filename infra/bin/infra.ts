@@ -31,7 +31,7 @@ const dynamodbStack = new DynamodbStack(app, `dynamodb-stack`)
 
 const snsStack = new SnsStack(app, 'sns-stack')
 
-const paymentServiceStack  = new PaymentServiceStack(app, 'payment-service-stack', {}, clusterStack.cluster, dynamodbStack.table, snsStack.topic)
+const paymentServiceStack  = new PaymentServiceStack(app, 'payment-service-stack', {}, clusterStack.cluster, dynamodbStack.table)
 paymentServiceStack.addDependency(clusterStack)
 paymentServiceStack.addDependency(dynamodbStack)
 paymentServiceStack.addDependency(snsStack)
