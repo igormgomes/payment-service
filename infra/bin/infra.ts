@@ -6,6 +6,7 @@ import {ClusterStack} from "../lib/cluster-stack";
 import {PaymentServiceStack} from "../lib/payment-service-stack";
 import {DynamodbStack} from "../lib/dynamodb-stack";
 import {SnsStack} from "../lib/sns-stack";
+import {PaymentReceiptServiceStack} from "../lib/payment-receipt-service-stack";
 
 const app = new cdk.App();
 
@@ -35,3 +36,6 @@ const paymentServiceStack  = new PaymentServiceStack(app, 'payment-service-stack
 paymentServiceStack.addDependency(clusterStack)
 paymentServiceStack.addDependency(dynamodbStack)
 paymentServiceStack.addDependency(snsStack)
+
+const paymentReceiptServiceStack  = new PaymentReceiptServiceStack(app, 'payment-receipt-service-stack', {}, clusterStack.cluster)
+paymentReceiptServiceStack.addDependency(clusterStack)

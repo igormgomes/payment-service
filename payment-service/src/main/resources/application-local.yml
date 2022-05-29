@@ -8,6 +8,3 @@ cloud:
 payment:
   topic:
     name: arn:aws:sns:us-east-1:000000000000:payment-event
-
-server:
-  port: 8081

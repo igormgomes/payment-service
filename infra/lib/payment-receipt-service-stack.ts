@@ -3,37 +3,32 @@ import {Construct} from 'constructs';
 import {Cluster, ContainerImage, LogDrivers} from "aws-cdk-lib/aws-ecs";
 import {ApplicationLoadBalancedFargateService} from "aws-cdk-lib/aws-ecs-patterns";
 import {LogGroup} from "aws-cdk-lib/aws-logs";
-import {Table} from "aws-cdk-lib/aws-dynamodb";
 import {Policy, PolicyStatement} from 'aws-cdk-lib/aws-iam';
 
-export class PaymentServiceStack extends Stack {
+export class PaymentReceiptServiceStack extends Stack {
 
-    constructor(scope: Construct, id: string, props?: StackProps, cluster?: Cluster, table?: Table) {
+    constructor(scope: Construct, id: string, props?: StackProps, cluster?: Cluster) {
         super(scope, id, props);
 
-        if (typeof table == 'undefined') {
-            throw 'Invalid Table'
-        }
+        let paymentReceiptQueueName = Fn.importValue('payment-receipt-queue-arn');
 
-        let paymentEventTopicArn = Fn.importValue('payment-event-topic-arn');
-
-        const paymentService = new ApplicationLoadBalancedFargateService(this, id, {
+        const paymentReceiptService = new ApplicationLoadBalancedFargateService(this, id, {
             cluster: cluster,
-            serviceName: 'payment-service',
+            serviceName: 'payment-receipt-service',
             cpu: 512,
             desiredCount: 1,
             listenerPort: 8080,
             memoryLimitMiB: 1024,
             taskImageOptions: {
-                containerName: 'payment',
-                image: ContainerImage.fromRegistry('igormgomes/payment-service:1.0.3'),
+                containerName: 'payment-receipt-service',
+                image: ContainerImage.fromRegistry('igormgomes/payment-receipt-service:1.0.0'),
                 environment: {
-                    'PAYMENT_TOPIC_NAME': paymentEventTopicArn,
+                    'PAYMENT_RECEIPT_QUEUE_NAME': paymentReceiptQueueName,
                 },
                 containerPort: 8080,
                 logDriver: LogDrivers.awsLogs({
                     logGroup: new LogGroup(this, 'log', {
-                        logGroupName: 'payment-service',
+                        logGroupName: 'payment-receipt-service',
                         removalPolicy: RemovalPolicy.DESTROY
                     }),
                     streamPrefix: 'aws/logs/developers'
@@ -42,13 +37,13 @@ export class PaymentServiceStack extends Stack {
             publicLoadBalancer: true
         })
 
-        paymentService.targetGroup.configureHealthCheck({
+        paymentReceiptService.targetGroup.configureHealthCheck({
             path: '/actuator/health',
             port: '8080',
             healthyHttpCodes: '200'
         })
 
-        const scalableTaskCount = paymentService.service.autoScaleTaskCount({
+        const scalableTaskCount = paymentReceiptService.service.autoScaleTaskCount({
             minCapacity: 1,
             maxCapacity: 10
         })
@@ -64,24 +59,22 @@ export class PaymentServiceStack extends Stack {
         })
 
         new CfnOutput(this, 'payment-service-cfn-output', {
-            value: paymentService.loadBalancer.loadBalancerDnsName,
-            exportName: 'payment-service-load-balancer',
-            description: 'Payment service load balancer dns'
+            value: paymentReceiptService.loadBalancer.loadBalancerDnsName,
+            exportName: 'payment-receipt-service-load-balancer',
+            description: 'Payment receipt service load balancer dns'
         })
 
-        const snsPolicyStatement = new PolicyStatement({
+        const sqsPolicyStatement = new PolicyStatement({
             actions: [
-                'sns:*'
+                'sqs:*'
             ],
             resources: [
-                paymentEventTopicArn
+                paymentReceiptQueueName
             ],
         });
-        let snsPolicy = new Policy(this, 'sns-full-access', {
-            statements: [snsPolicyStatement],
+        let sqsPolicy = new Policy(this, 'sqs-full-access', {
+            statements: [sqsPolicyStatement],
         });
-        paymentService.taskDefinition.taskRole.attachInlinePolicy(snsPolicy)
-
-        table.grantFullAccess(paymentService.taskDefinition.taskRole)
+        paymentReceiptService.taskDefinition.taskRole.attachInlinePolicy(sqsPolicy)
     }
 }

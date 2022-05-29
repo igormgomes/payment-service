@@ -1,0 +1,11 @@
+cloud:
+  aws:
+    sqs:
+      endpoint: http://localhost:4566
+
+server:
+  port: 8082
+
+payment:
+  receipt:
+    queue-name: payment-receipt

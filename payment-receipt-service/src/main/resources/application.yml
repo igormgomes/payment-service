@@ -1,0 +1,16 @@
+cloud:
+  aws:
+    stack:
+      auto: false
+    region:
+      static: us-east-1
+    sqs:
+      handler:
+        default-deletion-policy: never
+      listener:
+        auto-startup: true
+        max-number-of-messages: 10
+
+payment:
+  receipt:
+    queue-name: ${PAYMENT_RECEIPT_QUEUE_NAME}

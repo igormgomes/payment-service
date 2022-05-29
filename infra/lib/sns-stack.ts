@@ -14,9 +14,9 @@ export class SnsStack extends Stack {
             queueName: `schedule-payment`
         });
 
-        const addPaymentQueue = new Queue(this, 'add-payment-queue-stack', {
+        const paymentReceiptQueue = new Queue(this, 'payment-receipt-queue-stack', {
             visibilityTimeout: Duration.seconds(30),
-            queueName: `add-payment`
+            queueName: `payment-receipt`
         });
 
         const emailSubscription = new EmailSubscription('igormgomes94@gmail.com', {
@@ -34,12 +34,18 @@ export class SnsStack extends Stack {
                 })
             }
         }))
-        topic.addSubscription(new SqsSubscription(addPaymentQueue))
+        topic.addSubscription(new SqsSubscription(paymentReceiptQueue))
 
         new CfnOutput(this, 'payment-event-topic-arn-cfn-output', {
             value: topic.topicArn,
             exportName: 'payment-event-topic-arn',
             description: 'Payment event topic arn'
+        })
+
+        new CfnOutput(this, 'payment-receipt-queue-arn-cfn-output', {
+            value: paymentReceiptQueue.queueArn,
+            exportName: 'payment-receipt-queue-arn',
+            description: 'Payment receipt queue arn'
         })
     }
 }

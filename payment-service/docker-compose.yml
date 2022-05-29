@@ -32,7 +32,7 @@ services:
       "
         # SQS
         aws sqs create-queue --queue-name schedule-payment --endpoint-url=http://localstack:4566;
-        aws sqs create-queue --queue-name add-payment --endpoint-url=http://localstack:4566;
+        aws sqs create-queue --queue-name payment-receipt --endpoint-url=http://localstack:4566;
       
         sleep 2;
         # SNS
@@ -44,7 +44,7 @@ services:
             --protocol sqs --notification-endpoint arn:aws:sqs:us-east-1:000000000000:schedule-payment \
             --endpoint-url=http://localstack:4566;
         aws sns subscribe --topic-arn arn:aws:sns:us-east-1:000000000000:payment-event \
-            --protocol sqs --notification-endpoint arn:aws:sqs:us-east-1:000000000000:add-payment \
+            --protocol sqs --notification-endpoint arn:aws:sqs:us-east-1:000000000000:payment-receipt \
             --endpoint-url=http://localstack:4566;
         
         sleep 2;
