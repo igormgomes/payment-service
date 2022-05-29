@@ -7,6 +7,5 @@ import org.springframework.stereotype.Repository
 @Repository
 @EnableScan
 interface PaymentRepository: CrudRepository<Payment, PaymentKey> {
-
-    fun findAllByPk(code: String): List<Payment>
+    fun findByPk(id: String): Payment?
 }

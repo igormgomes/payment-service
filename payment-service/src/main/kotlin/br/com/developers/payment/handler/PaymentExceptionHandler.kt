@@ -1,5 +1,6 @@
 package br.com.developers.payment.handler
 
+import br.com.developers.payment.PaymentDeletionNotAllowedException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -25,6 +26,16 @@ class PaymentExceptionHandler: ResponseEntityExceptionHandler() {
         val errorResponse = ErrorResponse(errorMessage)
 
         return ResponseEntity(errorResponse, HttpHeaders(), HttpStatus.BAD_REQUEST)
+    }
+
+    @ExceptionHandler(PaymentDeletionNotAllowedException::class)
+    fun handlePaymentDeletionNotAllowedException(ex: PaymentDeletionNotAllowedException): ResponseEntity<ErrorResponse>{
+        log.error("Executing handlePaymentDeletionNotAllowedException", ex)
+
+        val errorMessage = ErrorMessage(ex.message)
+        val errorResponse = ErrorResponse(listOf(errorMessage))
+
+        return ResponseEntity(errorResponse, HttpHeaders(), HttpStatus.UNPROCESSABLE_ENTITY)
     }
 
     @ExceptionHandler(Exception::class)

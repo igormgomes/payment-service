@@ -19,9 +19,11 @@ data class PaymentRequest(
     val creditRequest: CreditRequest? = null
 ) {
     fun toPayment(): Payment {
+        checkNotNull(this.date)
+
         val payment = Payment()
         payment.pk = UUID.randomUUID().toString()
-        payment.sk = EventType.PROCESSED_PAYMENT.name
+        payment.sk = if(this.date == LocalDate.now()) EventType.PROCESSED_PAYMENT.name else EventType.SCHEDULED_PAYMENT.name
         payment.date = this.date
         payment.value = this.value
         payment.description = this.description

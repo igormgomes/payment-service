@@ -72,4 +72,58 @@ class PaymentServiceTest {
             assertThat(payments[0].sk, `is`(equalTo(payment.sk)))
         })
     }
+
+    @Test
+    fun `Should test the invalid payment in the find by id`() {
+        val exception = assertThrows<IllegalStateException> {
+            this.paymentService.delete(null)
+        }
+
+        assertThat(exception.message, `is`(equalTo("Required value was null.")))
+    }
+
+    @Test
+    fun `Should test the not found payment in the delete`() {
+        val id = "8d369a41-a278-4390-9fc8-9cd32425bf4c"
+        whenever(this.paymentRepository.findByPk(id))
+            .thenReturn(null)
+
+        val exception = assertThrows<PaymentDeletionNotAllowedException> {
+            this.paymentService.delete(id)
+        }
+
+        assertThat(exception.message, `is`(equalTo("Payment $id not found")))
+        verify(this.paymentRepository, never()).delete(any())
+    }
+
+    @Test
+    fun `Should test the processed payment in the delete`() {
+        val id = "8d369a41-a278-4390-9fc8-9cd32425bf4c"
+        val payment = Payment()
+        payment.pk = id
+        payment.sk = EventType.PROCESSED_PAYMENT.name
+        whenever(this.paymentRepository.findByPk(id))
+            .thenReturn(payment)
+
+        val exception = assertThrows<PaymentDeletionNotAllowedException> {
+            this.paymentService.delete(id)
+        }
+
+        assertThat(exception.message, `is`(equalTo("Payment processed $id can't be change")))
+        verify(this.paymentRepository, never()).delete(eq(payment))
+    }
+
+    @Test
+    fun `Should test the deleted payment`() {
+        val id = "8d369a41-a278-4390-9fc8-9cd32425bf4c"
+        val payment = Payment()
+        payment.pk = id
+        payment.sk = EventType.SCHEDULED_PAYMENT.name
+        whenever(this.paymentRepository.findByPk(id))
+            .thenReturn(payment)
+
+        this.paymentService.delete(id)
+
+        verify(this.paymentRepository, atLeastOnce()).delete(eq(payment))
+    }
 }
