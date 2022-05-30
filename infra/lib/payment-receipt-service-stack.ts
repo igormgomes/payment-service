@@ -10,7 +10,8 @@ export class PaymentReceiptServiceStack extends Stack {
     constructor(scope: Construct, id: string, props?: StackProps, cluster?: Cluster) {
         super(scope, id, props);
 
-        let paymentReceiptQueueName = Fn.importValue('payment-receipt-queue-arn');
+        let paymentReceiptQueueName = Fn.importValue('payment-receipt-queue-name');
+        let paymentReceiptQueueArn = Fn.importValue('payment-receipt-queue-arn');
 
         const paymentReceiptService = new ApplicationLoadBalancedFargateService(this, id, {
             cluster: cluster,
@@ -69,7 +70,7 @@ export class PaymentReceiptServiceStack extends Stack {
                 'sqs:*'
             ],
             resources: [
-                paymentReceiptQueueName
+                paymentReceiptQueueArn
             ],
         });
         let sqsPolicy = new Policy(this, 'sqs-full-access', {

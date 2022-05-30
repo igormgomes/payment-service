@@ -1,5 +1,6 @@
 package br.com.developers.receipt
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.messaging.listener.Acknowledgment
 import io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy
 import io.awspring.cloud.messaging.listener.annotation.SqsListener
@@ -12,17 +13,20 @@ import javax.validation.Valid
 
 @Component
 @Validated
-class PaymentReceiptConsumer {
+class PaymentReceiptConsumer(private val objectMapper: ObjectMapper) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     @SqsListener(value = ["\${payment.receipt.queue-name}"], deletionPolicy = SqsMessageDeletionPolicy.NEVER)
     fun listen(
-        @Valid request: String,
+        @Valid request: PaymentReceiptSnsRequest,
         @Headers messageHeaders: MessageHeaders,
         acknowledgment: Acknowledgment
     ) {
         log.info("Receiving message payment receipt $request")
+
+        val paymentReceiptRequest = this.objectMapper.readValue(request.message, PaymentReceiptRequest::class.java)
+        log.info("Payment receipt $paymentReceiptRequest")
 
         acknowledgment.acknowledge()
     }

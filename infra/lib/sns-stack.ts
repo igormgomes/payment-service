@@ -47,5 +47,11 @@ export class SnsStack extends Stack {
             exportName: 'payment-receipt-queue-arn',
             description: 'Payment receipt queue arn'
         })
+
+        new CfnOutput(this, 'payment-receipt-queue-name-cfn-output', {
+            value: paymentReceiptQueue.queueName,
+            exportName: 'payment-receipt-queue-name',
+            description: 'Payment receipt queue name'
+        })
     }
 }

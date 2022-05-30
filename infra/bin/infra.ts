@@ -39,3 +39,4 @@ paymentServiceStack.addDependency(snsStack)
 
 const paymentReceiptServiceStack  = new PaymentReceiptServiceStack(app, 'payment-receipt-service-stack', {}, clusterStack.cluster)
 paymentReceiptServiceStack.addDependency(clusterStack)
+paymentReceiptServiceStack.addDependency(snsStack)
