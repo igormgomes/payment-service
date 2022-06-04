@@ -13,20 +13,26 @@ import javax.validation.Valid
 
 @Component
 @Validated
-class PaymentReceiptConsumer(private val objectMapper: ObjectMapper) {
+class PaymentReceiptConsumer(
+    private val objectMapper: ObjectMapper,
+    private val paymentReceiptService: PaymentReceiptService
+) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     @SqsListener(value = ["\${payment.receipt.queue-name}"], deletionPolicy = SqsMessageDeletionPolicy.NEVER)
     fun listen(
-        @Valid request: PaymentReceiptSnsRequest,
+        @Valid request: PaymentReceiptSnsRequest?,
         @Headers messageHeaders: MessageHeaders,
         acknowledgment: Acknowledgment
     ) {
         log.info("Receiving message payment receipt $request")
 
-        val paymentReceiptRequest = this.objectMapper.readValue(request.message, PaymentReceiptRequest::class.java)
-        log.info("Payment receipt $paymentReceiptRequest")
+        request?.message?.let {
+            val paymentReceiptRequest = this.objectMapper.readValue(request.message, PaymentReceiptRequest::class.java)
+            val paymentReceipt = paymentReceiptRequest.toPaymentReceipt()
+            this.paymentReceiptService.save(paymentReceipt)
+        }
 
         acknowledgment.acknowledge()
     }

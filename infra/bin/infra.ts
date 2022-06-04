@@ -4,9 +4,10 @@ import * as cdk from 'aws-cdk-lib';
 import {VpcStack} from "../lib/vpc-stack";
 import {ClusterStack} from "../lib/cluster-stack";
 import {PaymentServiceStack} from "../lib/payment-service-stack";
-import {DynamodbStack} from "../lib/dynamodb-stack";
+import {PaymentDynamodbStack} from "../lib/payment-dynamodb-stack";
 import {SnsStack} from "../lib/sns-stack";
 import {PaymentReceiptServiceStack} from "../lib/payment-receipt-service-stack";
+import {PaymentReceiptDynamodbStack} from "../lib/payment-receipt-dynamodb-stack";
 
 const app = new cdk.App();
 
@@ -28,15 +29,17 @@ const vpcStack = new VpcStack(app, 'vpc-stack')
 const clusterStack = new ClusterStack(app, 'cluster-stack', {}, vpcStack.vpc)
 clusterStack.addDependency(vpcStack)
 
-const dynamodbStack = new DynamodbStack(app, `dynamodb-stack`)
+const paymentDynamodbStack = new PaymentDynamodbStack(app, `payment-dynamodb-stack`)
+const paymentReceiptDynamodbStack = new PaymentReceiptDynamodbStack(app, `payment-receipt-dynamodb-stack`)
 
 const snsStack = new SnsStack(app, 'sns-stack')
 
-const paymentServiceStack  = new PaymentServiceStack(app, 'payment-service-stack', {}, clusterStack.cluster, dynamodbStack.table)
+const paymentServiceStack  = new PaymentServiceStack(app, 'payment-service-stack', {}, clusterStack.cluster)
 paymentServiceStack.addDependency(clusterStack)
-paymentServiceStack.addDependency(dynamodbStack)
+paymentServiceStack.addDependency(paymentDynamodbStack)
 paymentServiceStack.addDependency(snsStack)
 
 const paymentReceiptServiceStack  = new PaymentReceiptServiceStack(app, 'payment-receipt-service-stack', {}, clusterStack.cluster)
 paymentReceiptServiceStack.addDependency(clusterStack)
+paymentReceiptServiceStack.addDependency(paymentReceiptDynamodbStack)
 paymentReceiptServiceStack.addDependency(snsStack)

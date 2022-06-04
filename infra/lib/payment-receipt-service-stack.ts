@@ -3,15 +3,16 @@ import {Construct} from 'constructs';
 import {Cluster, ContainerImage, LogDrivers} from "aws-cdk-lib/aws-ecs";
 import {ApplicationLoadBalancedFargateService} from "aws-cdk-lib/aws-ecs-patterns";
 import {LogGroup} from "aws-cdk-lib/aws-logs";
-import {Policy, PolicyStatement} from 'aws-cdk-lib/aws-iam';
+import {Effect, Policy, PolicyStatement} from 'aws-cdk-lib/aws-iam';
 
 export class PaymentReceiptServiceStack extends Stack {
 
     constructor(scope: Construct, id: string, props?: StackProps, cluster?: Cluster) {
         super(scope, id, props);
 
-        let paymentReceiptQueueName = Fn.importValue('payment-receipt-queue-name');
-        let paymentReceiptQueueArn = Fn.importValue('payment-receipt-queue-arn');
+        const paymentReceiptQueueName = Fn.importValue('payment-receipt-queue-name');
+        const paymentReceiptQueueArn = Fn.importValue('payment-receipt-queue-arn');
+        const paymentReceiptDynamoDbArn = Fn.importValue('payment-receipt-dynamodb-arn');
 
         const paymentReceiptService = new ApplicationLoadBalancedFargateService(this, id, {
             cluster: cluster,
@@ -66,6 +67,7 @@ export class PaymentReceiptServiceStack extends Stack {
         })
 
         const sqsPolicyStatement = new PolicyStatement({
+            //effect: Effect.ALLOW,
             actions: [
                 'sqs:*'
             ],
@@ -73,8 +75,19 @@ export class PaymentReceiptServiceStack extends Stack {
                 paymentReceiptQueueArn
             ],
         });
-        let sqsPolicy = new Policy(this, 'sqs-full-access', {
-            statements: [sqsPolicyStatement],
+        const dynamodbPolicyStatement = new PolicyStatement({
+            actions: [
+                'dynamodb:*'
+            ],
+            resources: [
+                paymentReceiptDynamoDbArn
+            ],
+        });
+        const sqsPolicy = new Policy(this, 'payment-service-policy', {
+            statements: [
+                sqsPolicyStatement,
+                dynamodbPolicyStatement,
+            ]
         });
         paymentReceiptService.taskDefinition.taskRole.attachInlinePolicy(sqsPolicy)
     }

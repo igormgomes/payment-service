@@ -3,19 +3,15 @@ import {Construct} from 'constructs';
 import {Cluster, ContainerImage, LogDrivers} from "aws-cdk-lib/aws-ecs";
 import {ApplicationLoadBalancedFargateService} from "aws-cdk-lib/aws-ecs-patterns";
 import {LogGroup} from "aws-cdk-lib/aws-logs";
-import {Table} from "aws-cdk-lib/aws-dynamodb";
 import {Policy, PolicyStatement} from 'aws-cdk-lib/aws-iam';
 
 export class PaymentServiceStack extends Stack {
 
-    constructor(scope: Construct, id: string, props?: StackProps, cluster?: Cluster, table?: Table) {
+    constructor(scope: Construct, id: string, props?: StackProps, cluster?: Cluster) {
         super(scope, id, props);
 
-        if (typeof table == 'undefined') {
-            throw 'Invalid Table'
-        }
-
-        let paymentEventTopicArn = Fn.importValue('payment-event-topic-arn');
+        const paymentEventTopicArn = Fn.importValue('payment-event-topic-arn');
+        const paymentDynamoDbArn = Fn.importValue('payment-dynamodb-arn');
 
         const paymentService = new ApplicationLoadBalancedFargateService(this, id, {
             cluster: cluster,
@@ -77,11 +73,20 @@ export class PaymentServiceStack extends Stack {
                 paymentEventTopicArn
             ],
         });
-        let snsPolicy = new Policy(this, 'sns-full-access', {
-            statements: [snsPolicyStatement],
+        const dynamodbPolicyStatement = new PolicyStatement({
+            actions: [
+                'dynamodb:*'
+            ],
+            resources: [
+                paymentDynamoDbArn
+            ],
+        });
+        const snsPolicy = new Policy(this, 'payment-service-policy', {
+            statements: [
+                snsPolicyStatement,
+                dynamodbPolicyStatement,
+            ]
         });
         paymentService.taskDefinition.taskRole.attachInlinePolicy(snsPolicy)
-
-        table.grantFullAccess(paymentService.taskDefinition.taskRole)
     }
 }

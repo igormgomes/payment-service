@@ -3,6 +3,7 @@ package br.com.developers.event
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class PaymentEventRequest(
+    @JsonProperty("id")
     val id: String?,
     @JsonProperty("event_type")
     val eventType: String?,

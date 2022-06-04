@@ -6,6 +6,7 @@ import java.time.LocalDate
 import java.util.UUID
 import javax.validation.constraints.DecimalMin
 import javax.validation.constraints.FutureOrPresent
+import javax.validation.constraints.NotBlank
 import javax.validation.constraints.NotNull
 
 data class PaymentRequest(
@@ -33,3 +34,9 @@ data class PaymentRequest(
         return payment
     }
 }
+
+data class CreditRequest(
+    @field:NotBlank
+    @JsonProperty("pix_key")
+    val pixKey: String? = null
+)

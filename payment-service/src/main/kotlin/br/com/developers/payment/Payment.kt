@@ -8,7 +8,6 @@ import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
-import java.util.*
 
 @DynamoDBTable(tableName = "payment")
 class Payment {
@@ -47,4 +46,16 @@ class Payment {
             this.paymentKey = if(paymentKey == null) PaymentKey() else this.paymentKey
             this.paymentKey?.sk = sk
         }
+}
+
+data class PaymentKey(
+    @DynamoDBHashKey(attributeName = "pk")
+    var pk: String? = null,
+
+    @DynamoDBRangeKey(attributeName = "sk")
+    var sk: String? = null
+)
+
+enum class EventType {
+    PROCESSED_PAYMENT, SCHEDULED_PAYMENT
 }

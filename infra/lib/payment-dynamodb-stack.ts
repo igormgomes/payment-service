@@ -1,8 +1,8 @@
-import {RemovalPolicy, Stack, StackProps} from 'aws-cdk-lib';
+import {CfnOutput, RemovalPolicy, Stack, StackProps} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import {AttributeType, BillingMode, StreamViewType, Table} from "aws-cdk-lib/aws-dynamodb";
 
-export class DynamodbStack extends Stack {
+export class PaymentDynamodbStack extends Stack {
 
     table: Table
 
@@ -22,6 +22,12 @@ export class DynamodbStack extends Stack {
             },
             //stream: StreamViewType.NEW_AND_OLD_IMAGES,
             removalPolicy: RemovalPolicy.DESTROY
+        })
+
+        new CfnOutput(this, 'payment-dynamodb-arn-cfn-output', {
+            value: this.table.tableArn,
+            exportName: 'payment-dynamodb-arn',
+            description: 'Payment dynamodb arn'
         })
     }
 }
