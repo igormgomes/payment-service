@@ -15,7 +15,7 @@ class LocalDateConverterTest {
     private lateinit var localDateConverter: LocalDateConverter
 
     @BeforeEach
-    fun before () {
+    fun before() {
         this.localDateConverter = LocalDateConverter()
     }
 

@@ -34,7 +34,7 @@ class PaymentReceipt {
     var pk: String
         get() = this.paymentReceiptKey?.pk.orEmpty()
         set(pk) {
-            this.paymentReceiptKey = if(paymentReceiptKey == null) PaymentReceiptKey() else this.paymentReceiptKey
+            this.paymentReceiptKey = if (paymentReceiptKey == null) PaymentReceiptKey() else this.paymentReceiptKey
             this.paymentReceiptKey?.pk = pk
         }
 

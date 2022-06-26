@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository
 
 @Repository
 @EnableScan
-interface PaymentReceiptRepository: CrudRepository<PaymentReceipt, PaymentReceiptKey> {
+interface PaymentReceiptRepository : CrudRepository<PaymentReceipt, PaymentReceiptKey> {
 
     fun findByPk(id: String): PaymentReceipt?
 }

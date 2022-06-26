@@ -1,7 +1,6 @@
 package br.com.developers.payment
 
 import br.com.developers.receipt.*
-import br.com.developers.receipt.PaymentReceiptServiceImpl
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
