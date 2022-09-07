@@ -3,7 +3,7 @@ import {Construct} from 'constructs';
 import {Cluster, ContainerImage, LogDrivers} from "aws-cdk-lib/aws-ecs";
 import {ApplicationLoadBalancedFargateService} from "aws-cdk-lib/aws-ecs-patterns";
 import {LogGroup} from "aws-cdk-lib/aws-logs";
-import {Effect, Policy, PolicyStatement} from 'aws-cdk-lib/aws-iam';
+import {Policy, PolicyStatement} from 'aws-cdk-lib/aws-iam';
 
 export class PaymentReceiptServiceStack extends Stack {
 
@@ -66,8 +66,14 @@ export class PaymentReceiptServiceStack extends Stack {
             description: 'Payment receipt service load balancer dns'
         })
 
+/*        const role = new Role(this, 'Role', {
+            assumedBy:  new ServicePrincipal('lambda.amazonaws.com'),
+            roleName: ''
+        });
+
+        role.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AmazonSQSFullAccess'))*/
+
         const sqsPolicyStatement = new PolicyStatement({
-            //effect: Effect.ALLOW,
             actions: [
                 'sqs:*'
             ],
@@ -83,12 +89,9 @@ export class PaymentReceiptServiceStack extends Stack {
                 paymentReceiptDynamoDbArn
             ],
         });
-        const sqsPolicy = new Policy(this, 'payment-service-policy', {
-            statements: [
-                sqsPolicyStatement,
-                dynamodbPolicyStatement,
-            ]
-        });
-        paymentReceiptService.taskDefinition.taskRole.attachInlinePolicy(sqsPolicy)
+        const paymentReceiptPolicy = new Policy(this, 'payment-service-policy');
+        paymentReceiptPolicy.addStatements(sqsPolicyStatement)
+        paymentReceiptPolicy.addStatements(dynamodbPolicyStatement)
+        paymentReceiptService.taskDefinition.taskRole.attachInlinePolicy(paymentReceiptPolicy)
     }
 }
