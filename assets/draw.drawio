@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2023-06-07T01:50:44.283Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36" etag="xU_D9OeTD7CcmQkBjNeP" version="21.3.7" type="github">
+<mxfile host="app.diagrams.net" modified="2023-06-07T01:54:19.153Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36" etag="YPWhVI_nITUnJhAy5xbT" version="21.3.7" type="github">
   <diagram id="sx4DB-smJGjERo_jBSHq" name="Page-1">
     <mxGraphModel dx="1194" dy="1795" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" background="#FFFFFF" math="0" shadow="1">
       <root>
@@ -20,7 +20,7 @@
           <mxGeometry x="215.5" y="569" width="65" height="67.5" as="geometry" />
         </mxCell>
         <mxCell id="Bep4C9arfv8VF3FYXjHi-4" value="payment-receipt-service" style="text;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#100f0f;labelBackgroundColor=none;labelBorderColor=none;fontSize=17;" parent="05hHKeat-juu67TqZmML-76" vertex="1">
-          <mxGeometry x="1128" y="156" width="199" height="32" as="geometry" />
+          <mxGeometry x="1104" y="158" width="199" height="32" as="geometry" />
         </mxCell>
         <mxCell id="gEH1WUusGIEwQWeTA551-21" style="edgeStyle=orthogonalEdgeStyle;curved=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=17;strokeColor=#1d1b1b;" parent="05hHKeat-juu67TqZmML-76" source="Bep4C9arfv8VF3FYXjHi-5" target="gEH1WUusGIEwQWeTA551-16" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -53,19 +53,19 @@
           <mxGeometry x="835" y="187" width="77" height="93" as="geometry" />
         </mxCell>
         <mxCell id="gEH1WUusGIEwQWeTA551-8" value="payment-receipt-sqs" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=17;fontColor=#2f2323;" parent="05hHKeat-juu67TqZmML-76" vertex="1">
-          <mxGeometry x="793" y="152" width="172" height="32" as="geometry" />
+          <mxGeometry x="792" y="160" width="172" height="32" as="geometry" />
         </mxCell>
         <mxCell id="gEH1WUusGIEwQWeTA551-16" value="" style="points=[[0,0,0],[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0,0],[0,1,0],[0.25,1,0],[0.5,1,0],[0.75,1,0],[1,1,0],[0,0.25,0],[0,0.5,0],[0,0.75,0],[1,0.25,0],[1,0.5,0],[1,0.75,0]];outlineConnect=0;fontColor=#232F3E;gradientColor=#4D72F3;gradientDirection=north;fillColor=#3334B9;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.dynamodb;" parent="05hHKeat-juu67TqZmML-76" vertex="1">
           <mxGeometry x="1410" y="194.5" width="78" height="78" as="geometry" />
-        </mxCell>
-        <mxCell id="gEH1WUusGIEwQWeTA551-22" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 17px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(248, 249, 250); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; float: none; display: inline !important;&quot;&gt;payment-receipt-db&lt;/span&gt;" style="text;whiteSpace=wrap;html=1;fontSize=17;" parent="05hHKeat-juu67TqZmML-76" vertex="1">
-          <mxGeometry x="1395" y="153" width="151" height="34" as="geometry" />
         </mxCell>
         <mxCell id="7fKdkNB14uINhyLDWxXF-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelBackgroundColor=none;fontColor=none;noLabel=1;strokeColor=#171111;" parent="05hHKeat-juu67TqZmML-76" source="7fKdkNB14uINhyLDWxXF-7" target="Bep4C9arfv8VF3FYXjHi-3" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="7fKdkNB14uINhyLDWxXF-7" value="" style="outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.aws3.elastic_load_balancing;fillColor=#F58534;gradientColor=none;" parent="05hHKeat-juu67TqZmML-76" vertex="1">
           <mxGeometry x="209.75" y="63" width="76.5" height="93" as="geometry" />
+        </mxCell>
+        <mxCell id="NVuwg_ga8I90dutKqnKQ-1" value="payment-receipt-db" style="text;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#100f0f;labelBackgroundColor=none;labelBorderColor=none;fontSize=17;" vertex="1" parent="05hHKeat-juu67TqZmML-76">
+          <mxGeometry x="1385" y="156" width="164" height="32" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
