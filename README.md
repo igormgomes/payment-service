@@ -9,7 +9,7 @@
 </p>
 
 # Project Overview:
-![image info](assets/drawio.jpg)
+![image info](assets/drawio.png)
 
 ---
 
