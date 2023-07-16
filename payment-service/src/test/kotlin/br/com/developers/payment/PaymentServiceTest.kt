@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.*
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.util.*
 
 @DisplayName("Payment service test")
 @ExtendWith(MockitoExtension::class)
@@ -40,7 +41,7 @@ class PaymentServiceTest {
     @Test
     fun `Should test the saved payment`() {
         val payment = Payment().apply {
-            this.pk = "44c7516-075b-4b52-8e90-9bb2207ce41d"
+            this.pk = UUID.fromString("44c7516-075b-4b52-8e90-9bb2207ce41d")
             this.sk = EventType.PROCESSED_PAYMENT.name
             this.date = LocalDate.now()
             this.value = BigDecimal.ONE
@@ -55,32 +56,9 @@ class PaymentServiceTest {
         verify(this.paymentRepository, atLeastOnce()).save(eq(payment))
         verify(this.paymentEventPublisher, atLeastOnce()).publish(this.argumentCaptor.capture())
         assertAll("Assert payment request event", {
-            assertThat(this.argumentCaptor.value.id, `is`(equalTo(payment.pk)))
+            assertThat(this.argumentCaptor.value.id, `is`(equalTo(payment.pk.toString())))
             assertThat(this.argumentCaptor.value.eventType, `is`(equalTo(payment.sk)))
             assertThat(this.argumentCaptor.value.pixKeyCredit, `is`(equalTo(payment.pixKeyCredit)))
-        })
-    }
-
-    @Test
-    fun `Should test the find all payments`() {
-        val payment = Payment().apply {
-            this.pk = "44c7516-075b-4b52-8e90-9bb2207ce41d"
-            this.sk = EventType.PROCESSED_PAYMENT.name
-            this.date = LocalDate.now()
-            this.value = BigDecimal.ONE
-            this.description = "test"
-            this.pixKeyCredit = "393"
-        }
-        whenever(this.paymentRepository.findAll())
-            .thenReturn(listOf(payment))
-
-        val payments = this.paymentService.findAll()
-
-        assertThat(payments.isEmpty(), `is`(equalTo(false)))
-
-        assertAll("Assert payment data", {
-            assertThat(payments[0].pk, `is`(equalTo(payment.pk)))
-            assertThat(payments[0].sk, `is`(equalTo(payment.sk)))
         })
     }
 
@@ -108,7 +86,7 @@ class PaymentServiceTest {
 
     @Test
     fun `Should test the find by id`() {
-        val id = "8d369a41-a278-4390-9fc8-9cd32425bf4c"
+        val id = UUID.fromString("8d369a41-a278-4390-9fc8-9cd32425bf4c")
         val paymentMock = Payment().apply {
             this.pk = id
             this.sk = EventType.PROCESSED_PAYMENT.name
@@ -117,10 +95,10 @@ class PaymentServiceTest {
             this.description = "test"
             this.pixKeyCredit = "393"
         }
-        whenever(this.paymentRepository.findByPk(id))
+        whenever(this.paymentRepository.findByPk(id.toString()))
             .thenReturn(paymentMock)
 
-        val payment = this.paymentService.findById(id)
+        val payment = this.paymentService.findById(id.toString())
 
         assertThat(payment.pk, `is`(equalTo(paymentMock.pk)))
     }
@@ -150,15 +128,15 @@ class PaymentServiceTest {
 
     @Test
     fun `Should test the processed payment in delete`() {
-        val id = "8d369a41-a278-4390-9fc8-9cd32425bf4c"
+        val id = UUID.fromString("8d369a41-a278-4390-9fc8-9cd32425bf4c")
         val payment = Payment()
         payment.pk = id
         payment.sk = EventType.PROCESSED_PAYMENT.name
-        whenever(this.paymentRepository.findByPk(id))
+        whenever(this.paymentRepository.findByPk(id.toString()))
             .thenReturn(payment)
 
         val exception = assertThrows<PaymentDeletionNotAllowedException> {
-            this.paymentService.delete(id)
+            this.paymentService.delete(id.toString())
         }
 
         assertThat(exception.message, `is`(equalTo("Payment processed $id can't be change")))
@@ -168,19 +146,20 @@ class PaymentServiceTest {
 
     @Test
     fun `Should test the deleted payment`() {
-        val id = "8d369a41-a278-4390-9fc8-9cd32425bf4c"
+        val id = UUID.fromString("8d369a41-a278-4390-9fc8-9cd32425bf4c")
         val payment = Payment()
         payment.pk = id
         payment.sk = EventType.SCHEDULED_PAYMENT.name
-        whenever(this.paymentRepository.findByPk(id))
+        payment.date = LocalDate.now()
+        whenever(this.paymentRepository.findByPk(id.toString()))
             .thenReturn(payment)
 
-        this.paymentService.delete(id)
+        this.paymentService.delete(id.toString())
 
         verify(this.paymentRepository, atLeastOnce()).delete(eq(payment))
         verify(this.paymentEventPublisher, atLeastOnce()).publish(this.argumentCaptor.capture())
         assertAll("Assert payment request event", {
-            assertThat(this.argumentCaptor.value.id, `is`(equalTo(payment.pk)))
+            assertThat(this.argumentCaptor.value.id, `is`(equalTo(payment.pk.toString())))
             assertThat(this.argumentCaptor.value.eventType, `is`(equalTo(payment.sk)))
             assertThat(this.argumentCaptor.value.pixKeyCredit, `is`(equalTo(payment.pixKeyCredit)))
         })

@@ -1,13 +1,13 @@
 package br.com.developers.payment
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import jakarta.validation.constraints.DecimalMin
+import jakarta.validation.constraints.FutureOrPresent
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.UUID
-import javax.validation.constraints.DecimalMin
-import javax.validation.constraints.FutureOrPresent
-import javax.validation.constraints.NotBlank
-import javax.validation.constraints.NotNull
 
 data class PaymentRequest(
     @field:NotNull
@@ -25,7 +25,7 @@ data class PaymentRequest(
         checkNotNull(this.date)
 
         val payment = Payment()
-        payment.pk = UUID.randomUUID().toString()
+        payment.pk = UUID.randomUUID()
         payment.sk = if(this.date == LocalDate.now()) EventType.PROCESSED_PAYMENT.name else EventType.SCHEDULED_PAYMENT.name
         payment.date = this.date
         payment.value = this.value

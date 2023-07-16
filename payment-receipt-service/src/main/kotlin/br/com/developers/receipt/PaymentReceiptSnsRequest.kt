@@ -25,7 +25,7 @@ data class PaymentReceiptRequest(
 
     fun toPaymentReceipt(): PaymentReceipt {
         val paymentReceipt = PaymentReceipt()
-        paymentReceipt.pk = UUID.randomUUID().toString()
+        paymentReceipt.pk = this.id ?: UUID.randomUUID().toString()
         paymentReceipt.eventType = this.eventType?.let { EventType.valueOf(it) }
         paymentReceipt.inclusionDate = LocalDate.now()
         paymentReceipt.paymentDate = this.date

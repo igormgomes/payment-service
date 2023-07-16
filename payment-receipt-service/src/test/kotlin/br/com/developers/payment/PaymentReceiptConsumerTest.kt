@@ -60,12 +60,12 @@ class PaymentReceiptConsumerTest {
 
         verify(this.paymentReceiptService, atLeastOnce()).save(this.argumentCaptor.capture())
         assertAll("Assert payment request event", {
-            assertThat(this.argumentCaptor.value.pk, `is`(notNullValue()))
+            assertThat(this.argumentCaptor.value.pk, `is`(equalTo(paymentReceiptRequest.id)))
             assertThat(this.argumentCaptor.value.eventType, `is`(equalTo(EventType.PROCESSED_PAYMENT)))
             assertThat(this.argumentCaptor.value.inclusionDate, `is`(equalTo(LocalDate.now())))
             assertThat(this.argumentCaptor.value.paymentDate, `is`(equalTo(paymentReceiptRequest.date)))
             assertThat(this.argumentCaptor.value.pixKeyCredit, `is`(equalTo(paymentReceiptRequest.pixKeyCredit)))
-            assertThat(this.argumentCaptor.value.ttl, `is`(equalTo(notNullValue())))
+            assertThat(this.argumentCaptor.value.ttl, `is`(notNullValue()))
         })
     }
 }

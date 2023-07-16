@@ -5,6 +5,7 @@ import br.com.developers.payment.PaymentNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ControllerAdvice
@@ -18,7 +19,12 @@ class PaymentExceptionHandler: ResponseEntityExceptionHandler() {
     private val log = LoggerFactory.getLogger(javaClass)
 
     @Override
-    override fun handleMethodArgumentNotValid(ex: MethodArgumentNotValidException, headers: HttpHeaders, status: HttpStatus, request: WebRequest): ResponseEntity<Any> {
+    override fun handleMethodArgumentNotValid(
+        ex: MethodArgumentNotValidException,
+        headers: HttpHeaders,
+        status: HttpStatusCode,
+        request: WebRequest
+    ): ResponseEntity<Any>? {
         log.error("Executing handleMethodArgumentNotValid", ex)
 
         val errorMessageResponse = ex.bindingResult.fieldErrors.map {

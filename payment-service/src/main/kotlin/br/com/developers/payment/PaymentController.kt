@@ -1,5 +1,6 @@
 package br.com.developers.payment
 
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -9,14 +10,13 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.net.URI
-import javax.validation.Valid
 
 @RestController
 @RequestMapping("/api/payment")
 class PaymentController(private val paymentService: PaymentService) {
 
     @PostMapping
-    fun save(@Valid @RequestBody paymentRequest: PaymentRequest): ResponseEntity<Any> {
+    fun save(@Valid @RequestBody paymentRequest: PaymentRequest): ResponseEntity<Payment> {
         val payment = paymentRequest.toPayment()
         this.paymentService.save(payment)
 
@@ -24,22 +24,15 @@ class PaymentController(private val paymentService: PaymentService) {
             .body(payment)
     }
 
-    @GetMapping
-    fun findAll(): ResponseEntity<Any> {
-        val payments = this.paymentService.findAll()
-
-        return ResponseEntity.ok(payments)
-    }
-
     @GetMapping("/{id}")
-    fun findById(@PathVariable("id") id: String): ResponseEntity<Any> {
+    fun findById(@PathVariable("id") id: String): ResponseEntity<Payment> {
         val payment = this.paymentService.findById(id)
 
         return ResponseEntity.ok(payment)
     }
 
     @DeleteMapping("/{id}")
-    fun delete(@PathVariable("id") id: String): ResponseEntity<Any> {
+    fun delete(@PathVariable("id") id: String): ResponseEntity<Payment> {
         this.paymentService.delete(id)
 
         return ResponseEntity.noContent().build()

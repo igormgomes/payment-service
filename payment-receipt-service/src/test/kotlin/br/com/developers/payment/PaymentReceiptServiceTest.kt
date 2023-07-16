@@ -45,4 +45,40 @@ class PaymentReceiptServiceTest {
 
         verify(this.paymentReceiptRepository, atLeastOnce()).save(eq(paymentReceipt))
     }
+
+    @Test
+    fun `Should test the invalid id in find by id`() {
+        val exception = assertThrows<IllegalStateException> {
+            this.paymentReceiptService.findById(null)
+        }
+
+        assertThat(exception.message, `is`(equalTo("Required value was null.")))
+    }
+
+    @Test
+    fun `Should test the not found payment in find by id`() {
+        val id = "8d369a41-a278-4390-9fc8-9cd32425bf4c"
+        whenever(this.paymentReceiptRepository.findByPk(id))
+            .thenReturn(null)
+
+        val exception = assertThrows<PaymentReceiptNotFoundException> {
+            this.paymentReceiptService.findById(id)
+        }
+
+        assertThat(exception.message, `is`(equalTo("Payment $id not found")))
+    }
+
+    @Test
+    fun `Should test the find by id`() {
+        val id = "8d369a41-a278-4390-9fc8-9cd32425bf4c"
+        val paymentMock = PaymentReceipt().apply {
+            this.pk = id
+        }
+        whenever(this.paymentReceiptRepository.findByPk(id))
+            .thenReturn(paymentMock)
+
+        val payment = this.paymentReceiptService.findById(id)
+
+        assertThat(payment.pk, `is`(equalTo(paymentMock.pk)))
+    }
 }

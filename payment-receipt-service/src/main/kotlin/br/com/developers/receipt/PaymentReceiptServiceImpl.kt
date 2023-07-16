@@ -18,4 +18,11 @@ internal class PaymentReceiptServiceImpl(
         val paymentReceiptSaved = this.paymentReceiptRepository.save(paymentReceipt)
         log.info("Payment receipt saved ${paymentReceiptSaved.pk}")
     }
+
+    override fun findById(id: String?): PaymentReceipt {
+        checkNotNull(id)
+        log.info("Finding receipt by $id")
+
+        return paymentReceiptRepository.findByPk(id) ?: throw PaymentReceiptNotFoundException("Payment $id not found")
+    }
 }
