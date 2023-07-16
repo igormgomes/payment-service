@@ -1,13 +1,13 @@
 package br.com.developers.payment
 
+import jakarta.validation.Validation
+import jakarta.validation.Validator
+import jakarta.validation.ValidatorFactory
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import javax.validation.Validation
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory
 
 class PaymentRequestTest {
 

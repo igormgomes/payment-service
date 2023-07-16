@@ -21,22 +21,13 @@ internal class PaymentServiceImpl(
         log.info("Payment saved ${paymentSaved.pk}")
 
         PaymentEventRequest(
-            id = paymentSaved.pk,
+            id = paymentSaved.pk.toString(),
             eventType = paymentSaved.sk,
             date = paymentSaved.date.toString(),
             pixKeyCredit = paymentSaved.pixKeyCredit
         ).apply {
             paymentEventPublisher.publish(this)
         }
-    }
-
-    override fun findAll(): List<Payment> {
-        log.info("Finding all payments")
-
-        return paymentRepository.findAll()
-            .iterator()
-            .asSequence()
-            .toList()
     }
 
     override fun findById(id: String?): Payment {
@@ -59,7 +50,7 @@ internal class PaymentServiceImpl(
         log.info("Payments deleted $id")
 
         PaymentEventRequest(
-            id = payment.pk,
+            id = payment.pk.toString(),
             eventType = payment.sk,
             date = payment.date.toString(),
             pixKeyCredit = payment.pixKeyCredit
