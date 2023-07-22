@@ -20,8 +20,9 @@ Payment is a platform for do payments any time
 ## :gear: Technologies
 
 <strong>Kotlin</strong></br>
-<strong>Spring Boot 2</strong></br>
-<strong>Spring Cloud AWS 2</strong></br>
+<strong>Java 17</strong></br>
+<strong>Spring Boot 3</strong></br>
+<strong>Spring Cloud AWS 3</strong></br>
 <strong>Junit 5 and Mockito</strong></br>
 
 ## :rocket: Getting Started
