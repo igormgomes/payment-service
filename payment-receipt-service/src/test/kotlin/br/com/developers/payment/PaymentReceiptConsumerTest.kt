@@ -42,18 +42,20 @@ class PaymentReceiptConsumerTest {
 
     @Test
     fun `Should test the valid payment receipt request`() {
-        val paymentReceiptSnsRequest = PaymentReceiptSnsRequest(message = "{}", messageId = "1")
+        val paymentReceiptSnsRequest = PaymentReceiptSnsRequest(message = "{}")
         val paymentReceiptRequest = PaymentReceiptRequest(
             id = "44c7516-075b-4b52-8e90-9bb2207ce41c",
-            eventType = "PROCESSED_PAYMENT",
+            eventType = EventType.PROCESSED_PAYMENT.name,
             date = LocalDate.now(),
             pixKeyCredit = "cce7b651-3698-4ac7-a9d4-04980d56df32"
         )
-        val paymentReceiptSnsPayloadRequest = PaymentReceiptSnsPayloadRequest(payload = "1")
+        val paymentReceiptSnsPayloadRequest = PaymentReceiptSnsPayloadRequest(payload = PaymentReceiptRequest(
+            id = paymentReceiptRequest.id,
+            eventType = paymentReceiptRequest.eventType,
+            date = paymentReceiptRequest.date,
+            pixKeyCredit = paymentReceiptRequest.pixKeyCredit))
         whenever(this.objectMapper.readValue(paymentReceiptSnsRequest.message, PaymentReceiptSnsPayloadRequest::class.java))
             .thenReturn(paymentReceiptSnsPayloadRequest)
-        whenever(this.objectMapper.readValue(paymentReceiptSnsPayloadRequest.payload, PaymentReceiptRequest::class.java))
-            .thenReturn(paymentReceiptRequest)
 
         this.paymentReceiptConsumer.listen(paymentReceiptSnsRequest, this.messageHeaders, this.acknowledgment)
 

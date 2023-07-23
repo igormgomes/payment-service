@@ -3,26 +3,22 @@ package br.com.developers.receipt
 import com.fasterxml.jackson.annotation.JsonProperty
 import jakarta.validation.constraints.NotNull
 import java.time.LocalDate
-import java.util.*
+import java.util.UUID
 
 data class PaymentReceiptSnsRequest(
     @field:NotNull
     @JsonProperty("Message")
     val message: String?,
-    @JsonProperty("MessageId")
-    val messageId: String?
 )
 
 data class PaymentReceiptSnsPayloadRequest(
-    @JsonProperty("payload")
-    val payload: String?
+    val payload: PaymentReceiptRequest,
 )
 
 data class PaymentReceiptRequest(
     val id: String?,
     @JsonProperty("event_type")
     val eventType: String?,
-    @JsonProperty("date")
     val date: LocalDate?,
     @JsonProperty("pix_key_credit")
     val pixKeyCredit: String?,

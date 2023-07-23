@@ -1,6 +1,9 @@
-package br.com.developers.infra
+package br.com.developers.config
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.*
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -19,5 +22,18 @@ class MessageConverterConfiguration {
         mappingJackson2MessageConverter.serializedPayloadClass = String::class.java
         mappingJackson2MessageConverter.isStrictContentTypeMatch = false
         return mappingJackson2MessageConverter
+    }
+
+    @Bean
+    @Primary
+    fun objectMapper(): ObjectMapper {
+        return ObjectMapper()
+            .registerModule(JavaTimeModule())
+            .registerModule(KotlinModule.Builder()
+                .build())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+            .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
     }
 }

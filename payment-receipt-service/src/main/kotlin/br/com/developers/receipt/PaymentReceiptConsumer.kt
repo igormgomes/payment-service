@@ -28,10 +28,10 @@ class PaymentReceiptConsumer(
         log.info("Receiving message payment receipt $request")
 
         request?.message?.let {
-            val paymentReceiptSnsPayloadRequest = this.objectMapper.readValue(request.message, PaymentReceiptSnsPayloadRequest::class.java)
-            val paymentReceiptRequest = this.objectMapper.readValue(paymentReceiptSnsPayloadRequest.payload, PaymentReceiptRequest::class.java)
-            val paymentReceipt = paymentReceiptRequest.toPaymentReceipt()
+            val paymentReceiptSnsPayloadRequest = this.objectMapper.readValue(it, PaymentReceiptSnsPayloadRequest::class.java)
+            val paymentReceipt = paymentReceiptSnsPayloadRequest.payload.toPaymentReceipt()
             this.paymentReceiptService.save(paymentReceipt)
+            log.info("Message processed ${paymentReceipt.pk}")
         }
 
         acknowledgement.acknowledge()

@@ -3,7 +3,6 @@ package br.com.developers.payment.event
 import br.com.developers.event.PaymentEventPublisher
 import br.com.developers.event.PaymentEventRequest
 import br.com.developers.payment.EventType
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sns.core.SnsTemplate
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.*
@@ -22,13 +21,12 @@ import java.time.LocalDate
 class PaymentEventPublisherTest {
 
     private val snsTemplate: SnsTemplate = mock()
-    private val objectMapper: ObjectMapper = mock()
 
     private lateinit var paymentEventPublisher: PaymentEventPublisher
 
     @BeforeEach
     fun before() {
-        this.paymentEventPublisher = PaymentEventPublisher(this.snsTemplate, this.objectMapper,"topic-test")
+        this.paymentEventPublisher = PaymentEventPublisher(this.snsTemplate,"topic-test")
     }
 
     @Test
@@ -48,8 +46,6 @@ class PaymentEventPublisherTest {
             date = LocalDate.now().toString(),
             pixKeyCredit = "123"
         )
-        whenever(this.objectMapper.writeValueAsString(eq(paymentEventRequest)))
-            .thenReturn("{}")
 
         this.paymentEventPublisher.publish(paymentEventRequest)
 
@@ -68,8 +64,6 @@ class PaymentEventPublisherTest {
             date = LocalDate.now().toString(),
             pixKeyCredit = "123"
         )
-        whenever(this.objectMapper.writeValueAsString(eq(paymentEventRequest)))
-            .thenThrow(RuntimeException("Error"))
 
         this.paymentEventPublisher.publish(paymentEventRequest)
 
