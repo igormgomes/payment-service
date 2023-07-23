@@ -51,7 +51,7 @@ internal class PaymentServiceImpl(
 
         PaymentEventRequest(
             id = payment.pk.toString(),
-            eventType = payment.sk,
+            eventType = EventType.DELETED_PAYMENT.name,
             date = payment.date.toString(),
             pixKeyCredit = payment.pixKeyCredit
         ).apply {

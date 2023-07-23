@@ -160,7 +160,7 @@ class PaymentServiceTest {
         verify(this.paymentEventPublisher, atLeastOnce()).publish(this.argumentCaptor.capture())
         assertAll("Assert payment request event", {
             assertThat(this.argumentCaptor.value.id, `is`(equalTo(payment.pk.toString())))
-            assertThat(this.argumentCaptor.value.eventType, `is`(equalTo(payment.sk)))
+            assertThat(this.argumentCaptor.value.eventType, `is`(equalTo(EventType.DELETED_PAYMENT.name)))
             assertThat(this.argumentCaptor.value.pixKeyCredit, `is`(equalTo(payment.pixKeyCredit)))
         })
     }

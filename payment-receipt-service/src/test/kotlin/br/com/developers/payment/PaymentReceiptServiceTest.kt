@@ -7,6 +7,7 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.*
 import org.mockito.kotlin.*
 import java.time.LocalDate
+import java.util.*
 
 @DisplayName("Payment receipt service test")
 class PaymentReceiptServiceTest {
@@ -32,8 +33,8 @@ class PaymentReceiptServiceTest {
     @Test
     fun `Should test the saved payment receipt`() {
         val paymentReceipt = PaymentReceipt().apply {
-            this.pk = "44c7516-075b-4b52-8e90-9bb2207ce41c"
-            this.eventType = EventType.PROCESSED_PAYMENT
+            this.pk = UUID.fromString("44c7516-075b-4b52-8e90-9bb2207ce41c")
+            this.status = EventType.PROCESSED_PAYMENT.name
             this.inclusionDate = LocalDate.now()
             this.paymentDate = LocalDate.now()
             this.pixKeyCredit = "cce7b651-3698-4ac7-a9d4-04980d56df32"
@@ -44,6 +45,22 @@ class PaymentReceiptServiceTest {
         this.paymentReceiptService.save(paymentReceipt)
 
         verify(this.paymentReceiptRepository, atLeastOnce()).save(eq(paymentReceipt))
+    }
+
+    @Test
+    fun `Should test the updated payment receipt`() {
+        val paymentReceipt = PaymentReceipt().apply {
+            this.pk = UUID.fromString("44c7516-075b-4b52-8e90-9bb2207ce41c")
+            this.status = EventType.DELETED_PAYMENT.name
+            this.inclusionDate = LocalDate.now()
+            this.paymentDate = LocalDate.now()
+            this.pixKeyCredit = "cce7b651-3698-4ac7-a9d4-04980d56df32"
+        }
+
+        this.paymentReceiptService.save(paymentReceipt)
+
+        verify(this.paymentReceiptRepository, atLeastOnce()).update(eq(paymentReceipt))
+        verify(this.paymentReceiptRepository, never()).save(eq(paymentReceipt))
     }
 
     @Test
@@ -72,7 +89,7 @@ class PaymentReceiptServiceTest {
     fun `Should test the find by id`() {
         val id = "8d369a41-a278-4390-9fc8-9cd32425bf4c"
         val paymentMock = PaymentReceipt().apply {
-            this.pk = id
+            this.pk = UUID.fromString(id)
         }
         whenever(this.paymentReceiptRepository.findByPk(id))
             .thenReturn(paymentMock)

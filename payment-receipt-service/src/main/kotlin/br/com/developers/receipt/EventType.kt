@@ -1,5 +1,5 @@
-package br.com.developers.payment;
+package br.com.developers.receipt
 
-public enum EventType {
+enum class EventType {
     PROCESSED_PAYMENT, SCHEDULED_PAYMENT, DELETED_PAYMENT
 }

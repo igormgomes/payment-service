@@ -13,7 +13,14 @@ internal class PaymentReceiptServiceImpl(
 
     override fun save(paymentReceipt: PaymentReceipt?) {
         checkNotNull(paymentReceipt)
+        checkNotNull(paymentReceipt.pk)
         log.info("Saving payment receipt $paymentReceipt")
+
+        if (paymentReceipt.status == EventType.DELETED_PAYMENT.name) {
+            paymentReceiptRepository.update(paymentReceipt)
+            log.info("Payment receipt upddated ${paymentReceipt.pk}")
+            return
+        }
 
         val paymentReceiptSaved = this.paymentReceiptRepository.save(paymentReceipt)
         log.info("Payment receipt saved ${paymentReceiptSaved.pk}")
