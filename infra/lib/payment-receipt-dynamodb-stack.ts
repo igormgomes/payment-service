@@ -10,13 +10,14 @@ export class PaymentReceiptDynamodbStack extends Stack {
         super(scope, id, props);
 
         this.table = new Table(this, id, {
-            tableName: 'payment-receipt',
+            tableName: 'payment_receipt',
             billingMode: BillingMode.PAY_PER_REQUEST,
             partitionKey: {
                 name: 'pk',
                 type: AttributeType.STRING
             },
-            removalPolicy: RemovalPolicy.DESTROY
+            removalPolicy: RemovalPolicy.DESTROY,
+            timeToLiveAttribute: 'ttl'
         })
 
         new CfnOutput(this, 'payment-receipt-dynamodb-arn-cfn-output', {

@@ -20,8 +20,8 @@ export class PaymentDynamodbStack extends Stack {
                 name: 'sk',
                 type: AttributeType.STRING
             },
-            //stream: StreamViewType.NEW_AND_OLD_IMAGES,
-            removalPolicy: RemovalPolicy.DESTROY
+            removalPolicy: RemovalPolicy.DESTROY,
+            timeToLiveAttribute: 'ttl'
         })
 
         new CfnOutput(this, 'payment-dynamodb-arn-cfn-output', {
