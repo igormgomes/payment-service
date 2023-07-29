@@ -22,7 +22,7 @@ export class PaymentServiceStack extends Stack {
             memoryLimitMiB: 1024,
             taskImageOptions: {
                 containerName: 'payment',
-                image: ContainerImage.fromRegistry('igormgomes/payment-service:latest'),
+                image: ContainerImage.fromRegistry('igormgomes/payment-service:3.0.3'),
                 environment: {
                     'PAYMENT_TOPIC_NAME': paymentEventTopicArn,
                 },
@@ -81,12 +81,12 @@ export class PaymentServiceStack extends Stack {
                 paymentDynamoDbArn
             ],
         });
-        const snsPolicy = new Policy(this, 'payment-service-policy', {
+        const policy = new Policy(this, 'payment-service-policy', {
             statements: [
                 snsPolicyStatement,
                 dynamodbPolicyStatement,
             ]
         });
-        paymentService.taskDefinition.taskRole.attachInlinePolicy(snsPolicy)
+        paymentService.taskDefinition.taskRole.attachInlinePolicy(policy)
     }
 }
