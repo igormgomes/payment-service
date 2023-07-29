@@ -1,4 +1,4 @@
-FROM openjdk:15
+FROM amazoncorretto:17
 
 VOLUME /tmp
 
