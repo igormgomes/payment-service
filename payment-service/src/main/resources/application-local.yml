@@ -11,3 +11,7 @@ spring:
 payment:
   topic:
     name: arn:aws:sns:us-east-1:000000000000:payment-event
+
+logging:
+  level:
+    io.awspring.cloud: error

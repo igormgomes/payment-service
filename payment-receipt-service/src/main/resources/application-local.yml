@@ -14,3 +14,7 @@ server:
 payment:
   receipt:
     queue-name: payment-receipt
+
+logging:
+  level:
+    io.awspring.cloud: error

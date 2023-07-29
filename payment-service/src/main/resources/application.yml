@@ -10,7 +10,3 @@ spring:
 payment:
   topic:
     name: ${PAYMENT_TOPIC_NAME}
-
-logging:
-  level:
-    io.awspring.cloud: debug

@@ -11,7 +11,3 @@ spring:
 payment:
   receipt:
     queue-name: ${PAYMENT_RECEIPT_QUEUE_NAME}
-
-logging:
-  level:
-    io.awspring.cloud: debug
