@@ -23,7 +23,7 @@ export class PaymentReceiptServiceStack extends Stack {
             memoryLimitMiB: 1024,
             taskImageOptions: {
                 containerName: 'payment-receipt-service',
-                image: ContainerImage.fromRegistry('igormgomes/payment-receipt-service:1.0.0'),
+                image: ContainerImage.fromRegistry('igormgomes/payment-receipt-service:latest'),
                 environment: {
                     'PAYMENT_RECEIPT_QUEUE_NAME': paymentReceiptQueueName,
                 },

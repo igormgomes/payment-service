@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>br.com.developers</groupId>
 	<artifactId>payment-receipt-service</artifactId>
-	<version>1.0.0</version>
+	<version>3.0.0</version>
 	<name>payment-receipt-service</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>

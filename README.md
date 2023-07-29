@@ -48,3 +48,5 @@ There is an alternative for run the project local using [Localstack](https://git
 ```
 docker-compose up
 ```
+
+--hotswap

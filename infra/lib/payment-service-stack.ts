@@ -22,7 +22,7 @@ export class PaymentServiceStack extends Stack {
             memoryLimitMiB: 1024,
             taskImageOptions: {
                 containerName: 'payment',
-                image: ContainerImage.fromRegistry('igormgomes/payment-service:1.0.3'),
+                image: ContainerImage.fromRegistry('igormgomes/payment-service:latest'),
                 environment: {
                     'PAYMENT_TOPIC_NAME': paymentEventTopicArn,
                 },
