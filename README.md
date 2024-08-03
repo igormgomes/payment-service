@@ -46,7 +46,8 @@ Payment is a platform for do payments any time
 
 There is an alternative for run the project local using [Localstack](https://github.com/localstack/localstack)
 ```
-docker-compose up
+docker compose up 
+##
 ```
 
 --hotswap
