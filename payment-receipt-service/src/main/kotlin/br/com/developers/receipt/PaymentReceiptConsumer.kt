@@ -27,13 +27,17 @@ class PaymentReceiptConsumer(
     ) {
         log.info("Receiving message payment receipt $request")
 
-        request?.message?.let {
-            val paymentReceiptSnsPayloadRequest = this.objectMapper.readValue(it, PaymentReceiptSnsPayloadRequest::class.java)
-            val paymentReceipt = paymentReceiptSnsPayloadRequest.payload.toPaymentReceipt()
-            this.paymentReceiptService.save(paymentReceipt)
-            log.info("Message processed ${paymentReceipt.pk}")
+        kotlin.runCatching {
+            request?.message?.let {
+                val paymentReceiptSnsPayloadRequest = this.objectMapper.readValue(it, PaymentReceiptSnsPayloadRequest::class.java)
+                val paymentReceipt = paymentReceiptSnsPayloadRequest.payload.toPaymentReceipt()
+                this.paymentReceiptService.save(paymentReceipt)
+                log.info("Message processed ${paymentReceipt.pk}")
+            }
+        }.onSuccess { _ ->
+            acknowledgement.acknowledge()
+        }.onFailure { e ->
+            log.error("Error processing message", e)
         }
-
-        acknowledgement.acknowledge()
     }
 }
