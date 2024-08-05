@@ -1,0 +1,3 @@
+payment:
+  receipt:
+    queue-name: payment-receipt

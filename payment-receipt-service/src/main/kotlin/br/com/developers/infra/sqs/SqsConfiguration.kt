@@ -13,7 +13,7 @@ import software.amazon.awssdk.services.sqs.SqsAsyncClient
 class SqsConfiguration {
 
     @Bean
-    fun defaultSqsListenerContainerFactory(sqsAsyncClient: SqsAsyncClient?): SqsMessageListenerContainerFactory<Any> {
+    fun defaultSqsListenerContainerFactory(sqsAsyncClient: SqsAsyncClient): SqsMessageListenerContainerFactory<Any> {
         return SqsMessageListenerContainerFactory
             .builder<Any>()
             .configure { options: SqsContainerOptionsBuilder ->
@@ -21,7 +21,7 @@ class SqsConfiguration {
                     .acknowledgementMode(AcknowledgementMode.MANUAL)
                     .acknowledgementOrdering(AcknowledgementOrdering.ORDERED)
             }
-            .sqsAsyncClient(sqsAsyncClient!!)
+            .sqsAsyncClient(sqsAsyncClient)
             .build()
     }
 }
