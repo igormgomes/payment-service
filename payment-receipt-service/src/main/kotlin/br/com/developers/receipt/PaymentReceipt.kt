@@ -3,8 +3,6 @@ package br.com.developers.receipt
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
-import java.time.Duration
-import java.time.Instant
 import java.time.LocalDate
 import java.util.*
 
@@ -26,5 +24,5 @@ data class PaymentReceipt (
     var pixKeyCredit: String? = null,
 
     @get:DynamoDbAttribute(value = "ttl")
-    var ttl: Long = Instant.now().plus(Duration.ofMinutes(60)).epochSecond
+    var ttl: Long = ttlOf60Minutes()
 )

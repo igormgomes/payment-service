@@ -1,12 +1,12 @@
 package br.com.developers.receipt
 
 import io.awspring.cloud.dynamodb.DynamoDbOperations
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Repository
 import software.amazon.awssdk.enhanced.dynamodb.Key
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest
 
-@Component
+@Repository
 class PaymentReceiptRepository(private val dynamoDbOperations: DynamoDbOperations) {
 
     fun findByPk(id: String): PaymentReceipt? {

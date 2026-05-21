@@ -5,8 +5,6 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
 import java.math.BigDecimal
-import java.time.Duration
-import java.time.Instant
 import java.time.LocalDate
 import java.util.*
 
@@ -31,7 +29,7 @@ data class Payment (
     var pixKeyCredit: String? = null,
 
     @get:DynamoDbAttribute(value = "ttl")
-    var ttl: Long = Instant.now().plus(Duration.ofMinutes(60)).epochSecond
+    var ttl: Long = ttlOf60Minutes()
 ) {
     override fun toString(): String {
         return "Payment{" +
