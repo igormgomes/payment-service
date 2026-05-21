@@ -1,11 +1,11 @@
 package br.com.developers.payment
 import io.awspring.cloud.dynamodb.DynamoDbTemplate
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Repository
 import software.amazon.awssdk.enhanced.dynamodb.Key
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest
 
-@Component
+@Repository
 class PaymentRepository(private val dynamoDbTemplate: DynamoDbTemplate) {
     fun findByPk(id: String): Payment? {
         val key = Key.builder()
