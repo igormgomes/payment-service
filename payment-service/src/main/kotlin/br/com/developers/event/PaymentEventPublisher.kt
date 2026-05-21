@@ -16,9 +16,7 @@ class PaymentEventPublisher(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun publish(paymentEventRequest: PaymentEventRequest?) {
-        checkNotNull(paymentEventRequest)
-
+    fun publish(paymentEventRequest: PaymentEventRequest) {
         kotlin.runCatching {
             val message: Message<PaymentEventRequest> = MessageBuilder.withPayload(paymentEventRequest)
                 .setHeader("event_type", paymentEventRequest.eventType.orEmpty())

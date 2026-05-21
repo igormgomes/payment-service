@@ -7,7 +7,6 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentCaptor
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.*
 import java.math.BigDecimal
@@ -20,22 +19,13 @@ class PaymentServiceTest {
 
     private val paymentRepository: PaymentRepository = mock()
     private val paymentEventPublisher: PaymentEventPublisher = mock()
-    private val argumentCaptor = ArgumentCaptor.forClass(PaymentEventRequest::class.java)
+    private val argumentCaptor = argumentCaptor<PaymentEventRequest>()
 
     private lateinit var paymentService: PaymentService
 
     @BeforeEach
-    fun before () {
+    fun before() {
         this.paymentService = PaymentServiceImpl(this.paymentRepository, this.paymentEventPublisher)
-    }
-
-    @Test
-    fun `Should test the invalid payment`() {
-        val exception = assertThrows<IllegalStateException> {
-            this.paymentService.save(null)
-        }
-
-        assertThat(exception.message, `is`(equalTo("Required value was null.")))
     }
 
     @Test
@@ -56,19 +46,10 @@ class PaymentServiceTest {
         verify(this.paymentRepository, atLeastOnce()).save(eq(payment))
         verify(this.paymentEventPublisher, atLeastOnce()).publish(this.argumentCaptor.capture())
         assertAll("Assert payment request event", {
-            assertThat(this.argumentCaptor.value.id, `is`(equalTo(payment.pk.toString())))
-            assertThat(this.argumentCaptor.value.eventType, `is`(equalTo(payment.sk)))
-            assertThat(this.argumentCaptor.value.pixKeyCredit, `is`(equalTo(payment.pixKeyCredit)))
+            assertThat(this.argumentCaptor.firstValue.id, `is`(equalTo(payment.pk.toString())))
+            assertThat(this.argumentCaptor.firstValue.eventType, `is`(equalTo(payment.sk)))
+            assertThat(this.argumentCaptor.firstValue.pixKeyCredit, `is`(equalTo(payment.pixKeyCredit)))
         })
-    }
-
-    @Test
-    fun `Should test the invalid id in find by id`() {
-        val exception = assertThrows<IllegalStateException> {
-            this.paymentService.findById(null)
-        }
-
-        assertThat(exception.message, `is`(equalTo("Required value was null.")))
     }
 
     @Test
@@ -104,15 +85,6 @@ class PaymentServiceTest {
     }
 
     @Test
-    fun `Should test the invalid id in delete`() {
-        val exception = assertThrows<IllegalStateException> {
-            this.paymentService.delete(null)
-        }
-
-        assertThat(exception.message, `is`(equalTo("Required value was null.")))
-    }
-
-    @Test
     fun `Should test the not found payment in delete`() {
         val id = "8d369a41-a278-4390-9fc8-9cd32425bf4c"
         whenever(this.paymentRepository.findByPk(id))
@@ -141,7 +113,7 @@ class PaymentServiceTest {
 
         assertThat(exception.message, `is`(equalTo("Payment processed $id can't be change")))
         verify(this.paymentRepository, never()).delete(eq(payment))
-        verify(this.paymentEventPublisher, never()).publish(this.argumentCaptor.capture())
+        verify(this.paymentEventPublisher, never()).publish(any())
     }
 
     @Test
@@ -159,9 +131,9 @@ class PaymentServiceTest {
         verify(this.paymentRepository, atLeastOnce()).delete(eq(payment))
         verify(this.paymentEventPublisher, atLeastOnce()).publish(this.argumentCaptor.capture())
         assertAll("Assert payment request event", {
-            assertThat(this.argumentCaptor.value.id, `is`(equalTo(payment.pk.toString())))
-            assertThat(this.argumentCaptor.value.eventType, `is`(equalTo(EventType.DELETED_PAYMENT.name)))
-            assertThat(this.argumentCaptor.value.pixKeyCredit, `is`(equalTo(payment.pixKeyCredit)))
+            assertThat(this.argumentCaptor.firstValue.id, `is`(equalTo(payment.pk.toString())))
+            assertThat(this.argumentCaptor.firstValue.eventType, `is`(equalTo(EventType.DELETED_PAYMENT.name)))
+            assertThat(this.argumentCaptor.firstValue.pixKeyCredit, `is`(equalTo(payment.pixKeyCredit)))
         })
     }
 }

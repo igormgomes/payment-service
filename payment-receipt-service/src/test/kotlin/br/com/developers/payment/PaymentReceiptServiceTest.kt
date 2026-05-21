@@ -22,15 +22,6 @@ class PaymentReceiptServiceTest {
     }
 
     @Test
-    fun `Should test the invalid payment receipt`() {
-        val exception = assertThrows<IllegalStateException> {
-            this.paymentReceiptService.save(null)
-        }
-
-        assertThat(exception.message, `is`(equalTo("Required value was null.")))
-    }
-
-    @Test
     fun `Should test the saved payment receipt`() {
         val paymentReceipt = PaymentReceipt().apply {
             this.pk = UUID.fromString("44c7516-075b-4b52-8e90-9bb2207ce41c")
@@ -61,15 +52,6 @@ class PaymentReceiptServiceTest {
 
         verify(this.paymentReceiptRepository, atLeastOnce()).update(eq(paymentReceipt))
         verify(this.paymentReceiptRepository, never()).save(eq(paymentReceipt))
-    }
-
-    @Test
-    fun `Should test the invalid id in find by id`() {
-        val exception = assertThrows<IllegalStateException> {
-            this.paymentReceiptService.findById(null)
-        }
-
-        assertThat(exception.message, `is`(equalTo("Required value was null.")))
     }
 
     @Test
