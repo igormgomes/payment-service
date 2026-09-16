@@ -1,6 +1,10 @@
 package br.com.developers.payment
 
-import br.com.developers.receipt.*
+import br.com.developers.receipt.application.PaymentReceiptService
+import br.com.developers.receipt.application.port.output.PaymentReceiptRepositoryPort
+import br.com.developers.receipt.domain.EventType
+import br.com.developers.receipt.domain.PaymentReceipt
+import br.com.developers.receipt.domain.PaymentReceiptNotFoundException
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
@@ -12,13 +16,13 @@ import java.util.*
 @DisplayName("Payment receipt service test")
 class PaymentReceiptServiceTest {
 
-    private val paymentReceiptRepository: PaymentReceiptRepository = mock()
+    private val paymentReceiptRepositoryPort: PaymentReceiptRepositoryPort = mock()
 
     private lateinit var paymentReceiptService: PaymentReceiptService
 
     @BeforeEach
     fun before() {
-        this.paymentReceiptService = PaymentReceiptServiceImpl(this.paymentReceiptRepository)
+        this.paymentReceiptService = PaymentReceiptService(this.paymentReceiptRepositoryPort)
     }
 
     @Test
@@ -30,12 +34,12 @@ class PaymentReceiptServiceTest {
             this.paymentDate = LocalDate.now()
             this.pixKeyCredit = "cce7b651-3698-4ac7-a9d4-04980d56df32"
         }
-        whenever(this.paymentReceiptRepository.save(paymentReceipt))
+        whenever(this.paymentReceiptRepositoryPort.save(paymentReceipt))
             .thenReturn(paymentReceipt)
 
         this.paymentReceiptService.save(paymentReceipt)
 
-        verify(this.paymentReceiptRepository, atLeastOnce()).save(eq(paymentReceipt))
+        verify(this.paymentReceiptRepositoryPort, atLeastOnce()).save(eq(paymentReceipt))
     }
 
     @Test
@@ -50,14 +54,14 @@ class PaymentReceiptServiceTest {
 
         this.paymentReceiptService.save(paymentReceipt)
 
-        verify(this.paymentReceiptRepository, atLeastOnce()).update(eq(paymentReceipt))
-        verify(this.paymentReceiptRepository, never()).save(eq(paymentReceipt))
+        verify(this.paymentReceiptRepositoryPort, atLeastOnce()).update(eq(paymentReceipt))
+        verify(this.paymentReceiptRepositoryPort, never()).save(eq(paymentReceipt))
     }
 
     @Test
     fun `Should test the not found payment in find by id`() {
         val id = "8d369a41-a278-4390-9fc8-9cd32425bf4c"
-        whenever(this.paymentReceiptRepository.findByPk(id))
+        whenever(this.paymentReceiptRepositoryPort.findByPk(id))
             .thenReturn(null)
 
         val exception = assertThrows<PaymentReceiptNotFoundException> {
@@ -73,7 +77,7 @@ class PaymentReceiptServiceTest {
         val paymentMock = PaymentReceipt().apply {
             this.pk = UUID.fromString(id)
         }
-        whenever(this.paymentReceiptRepository.findByPk(id))
+        whenever(this.paymentReceiptRepositoryPort.findByPk(id))
             .thenReturn(paymentMock)
 
         val payment = this.paymentReceiptService.findById(id)

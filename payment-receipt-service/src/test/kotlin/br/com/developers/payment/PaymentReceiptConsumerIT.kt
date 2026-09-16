@@ -2,7 +2,12 @@ package br.com.developers.payment
 
 import br.com.developers.config.MessageConverterConfiguration
 import br.com.developers.infra.sqs.SqsConfiguration
-import br.com.developers.receipt.*
+import br.com.developers.receipt.adapters.input.sqs.PaymentReceiptConsumer
+import br.com.developers.receipt.adapters.input.sqs.PaymentReceiptRequest
+import br.com.developers.receipt.adapters.input.sqs.PaymentReceiptSnsPayloadRequest
+import br.com.developers.receipt.adapters.input.sqs.PaymentReceiptSnsRequest
+import br.com.developers.receipt.application.port.input.SavePaymentReceiptUseCase
+import br.com.developers.receipt.domain.PaymentReceipt
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.operations.SqsTemplate
 import io.awspring.cloud.test.sqs.SqsTest
@@ -63,7 +68,7 @@ class PaymentReceiptConsumerIT {
     private lateinit var objectMapper: ObjectMapper
 
     @MockBean
-    private lateinit var paymentReceiptService: PaymentReceiptService
+    private lateinit var savePaymentReceiptUseCase: SavePaymentReceiptUseCase
 
     @Test
     fun `Should receive a message and save the payment`() {
@@ -83,6 +88,6 @@ class PaymentReceiptConsumerIT {
 
         await()
             .atMost(Duration.ofSeconds(4))
-            .untilAsserted { verify(this.paymentReceiptService).save(any(PaymentReceipt::class.java)) }
+            .untilAsserted { verify(this.savePaymentReceiptUseCase).save(any(PaymentReceipt::class.java)) }
     }
 }

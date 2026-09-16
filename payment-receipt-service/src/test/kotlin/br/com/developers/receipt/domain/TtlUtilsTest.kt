@@ -1,4 +1,4 @@
-package br.com.developers.receipt
+package br.com.developers.receipt.domain
 
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.greaterThanOrEqualTo

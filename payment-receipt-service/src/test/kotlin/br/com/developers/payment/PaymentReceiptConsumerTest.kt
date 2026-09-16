@@ -1,6 +1,12 @@
 package br.com.developers.payment
 
-import br.com.developers.receipt.*
+import br.com.developers.receipt.adapters.input.sqs.PaymentReceiptConsumer
+import br.com.developers.receipt.adapters.input.sqs.PaymentReceiptRequest
+import br.com.developers.receipt.adapters.input.sqs.PaymentReceiptSnsPayloadRequest
+import br.com.developers.receipt.adapters.input.sqs.PaymentReceiptSnsRequest
+import br.com.developers.receipt.application.port.input.SavePaymentReceiptUseCase
+import br.com.developers.receipt.domain.EventType
+import br.com.developers.receipt.domain.PaymentReceipt
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.listener.acknowledgement.Acknowledgement
 import org.hamcrest.CoreMatchers.notNullValue
@@ -20,7 +26,7 @@ import java.util.*
 class PaymentReceiptConsumerTest {
 
     private val objectMapper: ObjectMapper = mock()
-    private val paymentReceiptService: PaymentReceiptService = mock()
+    private val savePaymentReceiptUseCase: SavePaymentReceiptUseCase = mock()
     private val messageHeaders: MessageHeaders = mock()
     private val acknowledgment: Acknowledgement = mock()
     private val argumentCaptor = argumentCaptor<PaymentReceipt>()
@@ -29,14 +35,14 @@ class PaymentReceiptConsumerTest {
 
     @BeforeEach
     fun before() {
-        this.paymentReceiptConsumer = PaymentReceiptConsumer(this.objectMapper, this.paymentReceiptService)
+        this.paymentReceiptConsumer = PaymentReceiptConsumer(this.objectMapper, this.savePaymentReceiptUseCase)
     }
 
     @Test
     fun `Should test the invalid payment receipt request`() {
         this.paymentReceiptConsumer.listen(null, this.messageHeaders, this.acknowledgment)
 
-        verify(this.paymentReceiptService, never()).save(any())
+        verify(this.savePaymentReceiptUseCase, never()).save(any())
     }
 
     @Test
@@ -58,7 +64,7 @@ class PaymentReceiptConsumerTest {
 
         this.paymentReceiptConsumer.listen(paymentReceiptSnsRequest, this.messageHeaders, this.acknowledgment)
 
-        verify(this.paymentReceiptService, atLeastOnce()).save(this.argumentCaptor.capture())
+        verify(this.savePaymentReceiptUseCase, atLeastOnce()).save(this.argumentCaptor.capture())
         assertAll("Assert payment request event", {
             assertThat(this.argumentCaptor.firstValue.pk, `is`(equalTo(UUID.fromString(paymentReceiptRequest.id))))
             assertThat(this.argumentCaptor.firstValue.status, `is`(equalTo(EventType.PROCESSED_PAYMENT.name)))

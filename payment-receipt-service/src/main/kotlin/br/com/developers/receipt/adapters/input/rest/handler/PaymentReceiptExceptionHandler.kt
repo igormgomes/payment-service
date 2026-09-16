@@ -1,7 +1,6 @@
-package br.com.developers.receipt.handler
+package br.com.developers.receipt.adapters.input.rest.handler
 
-
-import br.com.developers.receipt.PaymentReceiptNotFoundException
+import br.com.developers.receipt.domain.PaymentReceiptNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus

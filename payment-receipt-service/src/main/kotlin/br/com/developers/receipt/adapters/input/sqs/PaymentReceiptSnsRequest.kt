@@ -1,5 +1,7 @@
-package br.com.developers.receipt
+package br.com.developers.receipt.adapters.input.sqs
 
+import br.com.developers.receipt.domain.EventType
+import br.com.developers.receipt.domain.PaymentReceipt
 import com.fasterxml.jackson.annotation.JsonProperty
 import jakarta.validation.constraints.NotNull
 import java.time.LocalDate

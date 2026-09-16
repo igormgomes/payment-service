@@ -1,5 +1,6 @@
-package br.com.developers.receipt
+package br.com.developers.receipt.adapters.input.sqs
 
+import br.com.developers.receipt.application.port.input.SavePaymentReceiptUseCase
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.annotation.SqsListener
 import io.awspring.cloud.sqs.listener.acknowledgement.Acknowledgement
@@ -14,7 +15,7 @@ import org.springframework.validation.annotation.Validated
 @Validated
 class PaymentReceiptConsumer(
     private val objectMapper: ObjectMapper,
-    private val paymentReceiptService: PaymentReceiptService
+    private val savePaymentReceiptUseCase: SavePaymentReceiptUseCase
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -31,7 +32,7 @@ class PaymentReceiptConsumer(
             request?.message?.let {
                 val paymentReceiptSnsPayloadRequest = this.objectMapper.readValue(it, PaymentReceiptSnsPayloadRequest::class.java)
                 val paymentReceipt = paymentReceiptSnsPayloadRequest.payload.toPaymentReceipt()
-                this.paymentReceiptService.save(paymentReceipt)
+                this.savePaymentReceiptUseCase.save(paymentReceipt)
                 log.info("Message processed ${paymentReceipt.pk}")
             }
         }.onSuccess { _ ->

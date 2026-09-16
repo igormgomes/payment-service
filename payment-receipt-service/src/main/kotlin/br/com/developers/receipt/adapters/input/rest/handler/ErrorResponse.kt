@@ -1,4 +1,4 @@
-package br.com.developers.receipt.handler
+package br.com.developers.receipt.adapters.input.rest.handler
 
 import com.fasterxml.jackson.annotation.JsonProperty
 

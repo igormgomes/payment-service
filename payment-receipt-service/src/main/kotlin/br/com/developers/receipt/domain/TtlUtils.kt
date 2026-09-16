@@ -1,4 +1,4 @@
-package br.com.developers.receipt
+package br.com.developers.receipt.domain
 
 import java.time.Duration
 import java.time.Instant

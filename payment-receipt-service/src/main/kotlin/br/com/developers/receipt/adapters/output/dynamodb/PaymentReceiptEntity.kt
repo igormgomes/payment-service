@@ -1,13 +1,14 @@
-package br.com.developers.receipt
+package br.com.developers.receipt.adapters.output.dynamodb
 
+import br.com.developers.receipt.domain.ttlOf60Minutes
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey
 import java.time.LocalDate
-import java.util.*
+import java.util.UUID
 
 @DynamoDbBean
-data class PaymentReceipt (
+data class PaymentReceiptEntity(
     @get:DynamoDbPartitionKey
     var pk: UUID? = null,
 
