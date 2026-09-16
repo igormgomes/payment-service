@@ -1,19 +1,16 @@
-package br.com.developers.payment
+package br.com.developers.receipt.adapters.input.sqs
 
 import br.com.developers.config.MessageConverterConfiguration
 import br.com.developers.infra.sqs.SqsConfiguration
-import br.com.developers.receipt.adapters.input.sqs.PaymentReceiptConsumer
-import br.com.developers.receipt.adapters.input.sqs.PaymentReceiptRequest
-import br.com.developers.receipt.adapters.input.sqs.PaymentReceiptSnsPayloadRequest
-import br.com.developers.receipt.adapters.input.sqs.PaymentReceiptSnsRequest
 import br.com.developers.receipt.application.port.input.SavePaymentReceiptUseCase
 import br.com.developers.receipt.domain.PaymentReceipt
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.operations.SqsTemplate
 import io.awspring.cloud.test.sqs.SqsTest
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.verify
+import org.mockito.kotlin.any
+import org.mockito.kotlin.never
+import org.mockito.kotlin.verify
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration
@@ -21,10 +18,8 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
-import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.localstack.LocalStackContainer
 import org.testcontainers.containers.localstack.LocalStackContainer.Service.SQS
-import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.shaded.org.awaitility.Awaitility.await
@@ -45,11 +40,12 @@ class PaymentReceiptConsumerIT {
         @JvmStatic
         @Container
         private val localStack: LocalStackContainer = LocalStackContainer(DockerImageName.parse("localstack/localstack:0.14.3"))
-            .withClasspathResourceMapping(
-                "/localstack/", "/docker-entrypoint-initaws.d", BindMode.READ_ONLY
-            )
             .withServices(SQS)
-            .waitingFor(Wait.forLogMessage(".*Initialized\\.\n", 1))
+
+        init {
+            localStack.start()
+            localStack.execInContainer("awslocal", "sqs", "create-queue", "--queue-name", "payment-receipt")
+        }
 
         @JvmStatic
         @DynamicPropertySource
@@ -58,7 +54,6 @@ class PaymentReceiptConsumerIT {
             registry.add("spring.cloud.aws.credentials.access-key") { "foo" }
             registry.add("spring.cloud.aws.credentials.secret-key") { "bar" }
             registry.add("spring.cloud.aws.region.static") { localStack.region }
-            registry.add("order-queue-name") { "payment-receipt" }
         }
     }
 
@@ -88,6 +83,19 @@ class PaymentReceiptConsumerIT {
 
         await()
             .atMost(Duration.ofSeconds(4))
-            .untilAsserted { verify(this.savePaymentReceiptUseCase).save(any(PaymentReceipt::class.java)) }
+            .untilAsserted { verify(this.savePaymentReceiptUseCase).save(any<PaymentReceipt>()) }
+    }
+
+    @Test
+    fun `Should not save when the SNS message payload is malformed`() {
+        val paymentReceiptSnsRequest = PaymentReceiptSnsRequest(message = "not-a-valid-json-payload")
+
+        logger.info("Sending malformed message to SQS: {}", paymentReceiptSnsRequest.message)
+        this.sqsTemplate.send("payment-receipt", paymentReceiptSnsRequest)
+
+        await()
+            .pollDelay(Duration.ofSeconds(2))
+            .atMost(Duration.ofSeconds(4))
+            .untilAsserted { verify(this.savePaymentReceiptUseCase, never()).save(any()) }
     }
 }

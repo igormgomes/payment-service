@@ -1,9 +1,5 @@
-package br.com.developers.payment
+package br.com.developers.receipt.adapters.input.sqs
 
-import br.com.developers.receipt.adapters.input.sqs.PaymentReceiptConsumer
-import br.com.developers.receipt.adapters.input.sqs.PaymentReceiptRequest
-import br.com.developers.receipt.adapters.input.sqs.PaymentReceiptSnsPayloadRequest
-import br.com.developers.receipt.adapters.input.sqs.PaymentReceiptSnsRequest
 import br.com.developers.receipt.application.port.input.SavePaymentReceiptUseCase
 import br.com.developers.receipt.domain.EventType
 import br.com.developers.receipt.domain.PaymentReceipt

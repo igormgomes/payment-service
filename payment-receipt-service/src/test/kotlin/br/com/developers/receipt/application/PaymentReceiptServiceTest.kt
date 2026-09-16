@@ -1,6 +1,5 @@
-package br.com.developers.payment
+package br.com.developers.receipt.application
 
-import br.com.developers.receipt.application.PaymentReceiptService
 import br.com.developers.receipt.application.port.output.PaymentReceiptRepositoryPort
 import br.com.developers.receipt.domain.EventType
 import br.com.developers.receipt.domain.PaymentReceipt
