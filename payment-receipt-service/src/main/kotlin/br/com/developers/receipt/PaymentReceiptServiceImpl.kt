@@ -6,13 +6,11 @@ import org.springframework.stereotype.Service
 @Service
 internal class PaymentReceiptServiceImpl(
     private val paymentReceiptRepository: PaymentReceiptRepository
-) :
-    PaymentReceiptService {
+) : PaymentReceiptService {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    override fun save(paymentReceipt: PaymentReceipt?) {
-        checkNotNull(paymentReceipt)
+    override fun save(paymentReceipt: PaymentReceipt) {
         checkNotNull(paymentReceipt.pk)
         log.info("Saving payment receipt $paymentReceipt")
 
@@ -26,8 +24,7 @@ internal class PaymentReceiptServiceImpl(
         log.info("Payment receipt saved ${paymentReceiptSaved.pk}")
     }
 
-    override fun findById(id: String?): PaymentReceipt {
-        checkNotNull(id)
+    override fun findById(id: String): PaymentReceipt {
         log.info("Finding receipt by $id")
 
         return paymentReceiptRepository.findByPk(id) ?: throw PaymentReceiptNotFoundException("Payment $id not found")

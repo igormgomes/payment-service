@@ -9,7 +9,6 @@ import org.hamcrest.MatcherAssert.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.*
@@ -26,16 +25,7 @@ class PaymentEventPublisherTest {
 
     @BeforeEach
     fun before() {
-        this.paymentEventPublisher = PaymentEventPublisher(this.snsTemplate,"topic-test")
-    }
-
-    @Test
-    fun `Should test the invalid payment request`() {
-        val exception = assertThrows<IllegalStateException> {
-            this.paymentEventPublisher.publish(null)
-        }
-
-        assertThat(exception.message, `is`(equalTo("Required value was null.")))
+        this.paymentEventPublisher = PaymentEventPublisher(this.snsTemplate, "topic-test")
     }
 
     @Test

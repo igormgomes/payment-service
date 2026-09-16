@@ -13,8 +13,7 @@ internal class PaymentServiceImpl(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    override fun save(payment: Payment?) {
-        checkNotNull(payment)
+    override fun save(payment: Payment) {
         log.info("Saving payment $payment")
 
         val paymentSaved = this.paymentRepository.save(payment)
@@ -30,15 +29,13 @@ internal class PaymentServiceImpl(
         }
     }
 
-    override fun findById(id: String?): Payment {
-        checkNotNull(id)
+    override fun findById(id: String): Payment {
         log.info("Finding by $id")
 
         return paymentRepository.findByPk(id) ?: throw PaymentNotFoundException("Payment $id not found")
     }
 
-    override fun delete(id: String?) {
-        checkNotNull(id)
+    override fun delete(id: String) {
         log.info("Deleting payment $id")
 
         val payment =

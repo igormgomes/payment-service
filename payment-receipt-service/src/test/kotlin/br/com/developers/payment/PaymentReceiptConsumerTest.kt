@@ -11,7 +11,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
-import org.mockito.ArgumentCaptor
 import org.mockito.kotlin.*
 import org.springframework.messaging.MessageHeaders
 import java.time.LocalDate
@@ -24,7 +23,7 @@ class PaymentReceiptConsumerTest {
     private val paymentReceiptService: PaymentReceiptService = mock()
     private val messageHeaders: MessageHeaders = mock()
     private val acknowledgment: Acknowledgement = mock()
-    private val argumentCaptor = ArgumentCaptor.forClass(PaymentReceipt::class.java)
+    private val argumentCaptor = argumentCaptor<PaymentReceipt>()
 
     private lateinit var paymentReceiptConsumer: PaymentReceiptConsumer
 
@@ -61,12 +60,12 @@ class PaymentReceiptConsumerTest {
 
         verify(this.paymentReceiptService, atLeastOnce()).save(this.argumentCaptor.capture())
         assertAll("Assert payment request event", {
-            assertThat(this.argumentCaptor.value.pk, `is`(equalTo(UUID.fromString(paymentReceiptRequest.id))))
-            assertThat(this.argumentCaptor.value.status, `is`(equalTo(EventType.PROCESSED_PAYMENT.name)))
-            assertThat(this.argumentCaptor.value.inclusionDate, `is`(equalTo(LocalDate.now())))
-            assertThat(this.argumentCaptor.value.paymentDate, `is`(equalTo(paymentReceiptRequest.date)))
-            assertThat(this.argumentCaptor.value.pixKeyCredit, `is`(equalTo(paymentReceiptRequest.pixKeyCredit)))
-            assertThat(this.argumentCaptor.value.ttl, `is`(notNullValue()))
+            assertThat(this.argumentCaptor.firstValue.pk, `is`(equalTo(UUID.fromString(paymentReceiptRequest.id))))
+            assertThat(this.argumentCaptor.firstValue.status, `is`(equalTo(EventType.PROCESSED_PAYMENT.name)))
+            assertThat(this.argumentCaptor.firstValue.inclusionDate, `is`(equalTo(LocalDate.now())))
+            assertThat(this.argumentCaptor.firstValue.paymentDate, `is`(equalTo(paymentReceiptRequest.date)))
+            assertThat(this.argumentCaptor.firstValue.pixKeyCredit, `is`(equalTo(paymentReceiptRequest.pixKeyCredit)))
+            assertThat(this.argumentCaptor.firstValue.ttl, `is`(notNullValue()))
         })
     }
 }
