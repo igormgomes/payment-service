@@ -4,7 +4,8 @@ import br.com.developers.config.MessageConverterConfiguration
 import br.com.developers.infra.sqs.SqsConfiguration
 import br.com.developers.receipt.application.port.input.SavePaymentReceiptUseCase
 import br.com.developers.receipt.domain.PaymentReceipt
-import com.fasterxml.jackson.databind.ObjectMapper
+import br.com.developers.receipt.support.execAwsLocal
+import tools.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.operations.SqsTemplate
 import io.awspring.cloud.test.sqs.SqsTest
 import org.junit.jupiter.api.Test
@@ -14,16 +15,15 @@ import org.mockito.kotlin.verify
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
-import org.testcontainers.containers.localstack.LocalStackContainer
-import org.testcontainers.containers.localstack.LocalStackContainer.Service.SQS
+import org.testcontainers.localstack.LocalStackContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import org.testcontainers.shaded.org.awaitility.Awaitility.await
+import org.awaitility.Awaitility.await
 import org.testcontainers.utility.DockerImageName
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import java.time.Duration
 import java.time.LocalDate
 
@@ -39,20 +39,20 @@ class PaymentReceiptConsumerIT {
 
         @JvmStatic
         @Container
-        private val localStack: LocalStackContainer = LocalStackContainer(DockerImageName.parse("localstack/localstack:0.14.3"))
-            .withServices(SQS)
+        private val localStack: LocalStackContainer = LocalStackContainer(DockerImageName.parse("localstack/localstack:3.4.0"))
+            .withServices("sqs")
 
         init {
             localStack.start()
-            localStack.execInContainer("awslocal", "sqs", "create-queue", "--queue-name", "payment-receipt")
+            localStack.execAwsLocal("sqs", "create-queue", "--queue-name", "payment-receipt")
         }
 
         @JvmStatic
         @DynamicPropertySource
         fun properties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.cloud.aws.sqs.endpoint") { localStack.getEndpointOverride(SQS).toString() }
-            registry.add("spring.cloud.aws.credentials.access-key") { "foo" }
-            registry.add("spring.cloud.aws.credentials.secret-key") { "bar" }
+            registry.add("spring.cloud.aws.sqs.endpoint") { localStack.endpoint.toString() }
+            registry.add("spring.cloud.aws.credentials.access-key") { localStack.accessKey }
+            registry.add("spring.cloud.aws.credentials.secret-key") { localStack.secretKey }
             registry.add("spring.cloud.aws.region.static") { localStack.region }
         }
     }
@@ -62,7 +62,7 @@ class PaymentReceiptConsumerIT {
     @Autowired
     private lateinit var objectMapper: ObjectMapper
 
-    @MockBean
+    @MockitoBean
     private lateinit var savePaymentReceiptUseCase: SavePaymentReceiptUseCase
 
     @Test

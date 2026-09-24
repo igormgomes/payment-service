@@ -24,7 +24,7 @@ services:
       - ./folderhost:/app
       - ./folderhost:/project
     environment:
-      - AWS_ACCESS_KEY_ID=admin
+      - AWS_ACCESS_KEY_ID=admi
       - AWS_SECRET_ACCESS_KEY=adminsecret
       - AWS_DEFAULT_REGION=us-east-1
     entrypoint: /bin/sh -c

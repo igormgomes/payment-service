@@ -15,7 +15,7 @@ class DynamoDbConfiguration {
         val defaultResolver = DefaultDynamoDbTableNameResolver()
 
         return object : DynamoDbTableNameResolver {
-            override fun <T> resolve(clazz: Class<T>): String =
+            override fun <T : Any> resolve(clazz: Class<T>): String =
                 if (clazz == PaymentReceiptEntity::class.java) "payment_receipt" else defaultResolver.resolve(clazz)
         }
     }

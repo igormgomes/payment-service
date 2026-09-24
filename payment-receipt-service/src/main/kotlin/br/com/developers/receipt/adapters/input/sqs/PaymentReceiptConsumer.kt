@@ -1,7 +1,7 @@
 package br.com.developers.receipt.adapters.input.sqs
 
 import br.com.developers.receipt.application.port.input.SavePaymentReceiptUseCase
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.annotation.SqsListener
 import io.awspring.cloud.sqs.listener.acknowledgement.Acknowledgement
 import jakarta.validation.Valid

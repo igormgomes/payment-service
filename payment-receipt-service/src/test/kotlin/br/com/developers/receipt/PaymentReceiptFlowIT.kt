@@ -5,7 +5,8 @@ import br.com.developers.receipt.adapters.input.sqs.PaymentReceiptSnsPayloadRequ
 import br.com.developers.receipt.adapters.input.sqs.PaymentReceiptSnsRequest
 import br.com.developers.receipt.application.port.output.PaymentReceiptRepositoryPort
 import br.com.developers.receipt.domain.EventType
-import com.fasterxml.jackson.databind.ObjectMapper
+import br.com.developers.receipt.support.execAwsLocal
+import tools.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.operations.SqsTemplate
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
@@ -15,12 +16,10 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
-import org.testcontainers.containers.localstack.LocalStackContainer
-import org.testcontainers.containers.localstack.LocalStackContainer.Service.DYNAMODB
-import org.testcontainers.containers.localstack.LocalStackContainer.Service.SQS
+import org.testcontainers.localstack.LocalStackContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import org.testcontainers.shaded.org.awaitility.Awaitility.await
+import org.awaitility.Awaitility.await
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 import java.time.LocalDate
@@ -35,14 +34,14 @@ class PaymentReceiptFlowIT {
 
         @JvmStatic
         @Container
-        private val localStack: LocalStackContainer = LocalStackContainer(DockerImageName.parse("localstack/localstack:0.14.3"))
-            .withServices(DYNAMODB, SQS)
+        private val localStack: LocalStackContainer = LocalStackContainer(DockerImageName.parse("localstack/localstack:3.4.0"))
+            .withServices("dynamodb", "sqs")
 
         init {
             localStack.start()
-            localStack.execInContainer("awslocal", "sqs", "create-queue", "--queue-name", "payment-receipt")
-            localStack.execInContainer(
-                "awslocal", "dynamodb", "create-table",
+            localStack.execAwsLocal("sqs", "create-queue", "--queue-name", "payment-receipt")
+            localStack.execAwsLocal(
+                "dynamodb", "create-table",
                 "--table-name", "payment_receipt",
                 "--attribute-definitions", "AttributeName=pk,AttributeType=S",
                 "--key-schema", "AttributeName=pk,KeyType=HASH",
@@ -53,10 +52,10 @@ class PaymentReceiptFlowIT {
         @JvmStatic
         @DynamicPropertySource
         fun properties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.cloud.aws.dynamodb.endpoint") { localStack.getEndpointOverride(DYNAMODB).toString() }
-            registry.add("spring.cloud.aws.sqs.endpoint") { localStack.getEndpointOverride(SQS).toString() }
-            registry.add("spring.cloud.aws.credentials.access-key") { "foo" }
-            registry.add("spring.cloud.aws.credentials.secret-key") { "bar" }
+            registry.add("spring.cloud.aws.dynamodb.endpoint") { localStack.endpoint.toString() }
+            registry.add("spring.cloud.aws.sqs.endpoint") { localStack.endpoint.toString() }
+            registry.add("spring.cloud.aws.credentials.access-key") { localStack.accessKey }
+            registry.add("spring.cloud.aws.credentials.secret-key") { localStack.secretKey }
             registry.add("spring.cloud.aws.region.static") { localStack.region }
         }
     }

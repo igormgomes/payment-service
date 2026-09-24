@@ -1,6 +1,12 @@
 # CLAUDE.md — payment-service
 
 This file documents the codebase for AI assistants working in this repository.
+Module-specific conventions live next to each module:
+
+- `payment-service/CLAUDE.md` — layered REST API
+- `payment-receipt-service/CLAUDE.md` — hexagonal SQS consumer
+
+Claude Code loads a module's file when working inside that directory.
 
 ## Project Overview
 
@@ -13,97 +19,37 @@ See `assets/draw.jpg` for the architecture diagram.
 ## Repository Structure
 
 ```
-payment-service/            # REST API microservice (ports 8080)
-payment-receipt-service/    # SQS consumer microservice (port 8082)
+payment-service/            # REST API microservice (layered)
+payment-receipt-service/    # SQS consumer + REST query microservice (hexagonal)
+  docs/arq-hex/             # PRD.md and SDD.md for the hexagonal design
 infra/                      # AWS CDK infrastructure (TypeScript)
 docker-compose.yml          # LocalStack local development environment
 assets/                     # Architecture diagrams
+.claude/agents/             # Project subagents (see "Claude Code agents")
 ```
+
+The two services are independent Maven projects (each with its own `./mvnw` and `pom.xml`). They deliberately differ in architecture and in framework/JDK versions, so never assume a convention from one applies to the other.
 
 ---
 
-## Tech Stack
+## Modules at a glance
 
-| Layer | Technology |
-|---|---|
-| Language | Kotlin 1.8.22 + Java 17 |
-| Framework | Spring Boot 3.1.1 + Spring Cloud AWS 3.0.0 |
-| Messaging | AWS SNS (publish) + SQS (consume) |
-| Database | AWS DynamoDB |
-| Compute | AWS ECS Fargate (1–10 tasks, auto-scaling) |
-| Infrastructure | AWS CDK 2.13.0 (TypeScript) |
-| Local AWS | LocalStack (via Docker) |
-| Build | Maven (per-service `./mvnw`) / NPM (infra) |
-| Testing | JUnit 5, Mockito-Kotlin, TestContainers + LocalStack |
+| | `payment-service` | `payment-receipt-service` |
+|---|---|---|
+| Role | REST API, publishes events to SNS | Consumes SQS, stores receipts, REST query |
+| Architecture | Layered (controller → service → repository) | Hexagonal (domain / application / adapters) |
+| Kotlin | 1.8.22 | 2.3.21 |
+| JDK to build with | 17 | 25 |
+| Spring Boot | 3.1.1 | 4.1.1 |
+| Spring Cloud AWS | 3.0.0 | 4.1.1 |
+| JSON | Jackson 2 (`com.fasterxml.jackson`) | Jackson 3 (`tools.jackson`; `@JsonProperty`/`@JsonInclude` annotations remain in `com.fasterxml.jackson.annotation`) |
+| Docker base image | `amazoncorretto:17` | `amazoncorretto:25` |
+| LocalStack in ITs | `localstack/localstack:0.14.3` | `localstack/localstack:3.4.0` |
+| Server port | 8080 | 8080 (AWS); 8082 with the `local` profile |
 
----
+Always confirm versions in the module's `pom.xml` before relying on this table.
 
-## Module Structure
-
-### payment-service
-
-```
-src/main/kotlin/br/com/developers/
-├── PaymentServiceApplication.kt
-├── payment/
-│   ├── Payment.kt                        # DynamoDB entity (pk + sk)
-│   ├── PaymentController.kt              # REST: POST/GET/DELETE /api/payment
-│   ├── PaymentService.kt                 # Interface
-│   ├── PaymentServiceImpl.kt             # Business logic implementation
-│   ├── PaymentRepository.kt              # DynamoDB data access
-│   ├── PaymentRequest.kt                 # Request DTO (validated)
-│   ├── PaymentNotFoundException.kt
-│   ├── PaymentDeletionNotAllowedException.kt
-│   ├── EventType.java                    # Enum: PROCESSED/SCHEDULED/DELETED_PAYMENT
-│   └── handler/
-│       ├── PaymentExceptionHandler.kt    # @ControllerAdvice
-│       ├── ErrorResponse.kt
-│       └── ErrorMessageResponse.kt
-└── event/
-    ├── PaymentEventPublisher.kt           # Publishes to SNS on save/delete
-    └── PaymentEventRequest.kt
-```
-
-**Layer flow:** `PaymentController` → `PaymentService` (interface) → `PaymentServiceImpl` → `PaymentRepository` → DynamoDB + `PaymentEventPublisher` → SNS
-
-### payment-receipt-service
-
-```
-src/main/kotlin/br/com/developers/
-├── PaymentReceiptServiceApplication.kt
-├── config/
-│   └── MessageConverterConfiguration.kt  # Jackson ObjectMapper for SQS messages
-├── infra/sqs/
-│   └── SqsConfiguration.kt               # SqsMessageListenerContainerFactory (manual ack)
-└── receipt/
-    ├── PaymentReceipt.kt                  # DynamoDB entity (pk only)
-    ├── PaymentReceiptController.kt        # REST: GET /api/payment-receipt/{id}
-    ├── PaymentReceiptService.kt           # Interface
-    ├── PaymentReceiptServiceImpl.kt
-    ├── PaymentReceiptRepository.kt
-    ├── PaymentReceiptConsumer.kt          # @SqsListener on payment-receipt queue
-    ├── PaymentReceiptSnsRequest.kt        # SNS envelope wrapper
-    ├── EventType.kt
-    ├── PaymentReceiptNotFoundException.kt
-    └── handler/
-        ├── PaymentReceiptExceptionHandler.kt
-        ├── ErrorResponse.kt
-        └── ErrorMessageResponse.kt
-```
-
-### infra (AWS CDK)
-
-```
-bin/infra.ts                # Stack entry point and dependency wiring
-lib/
-├── vpc-stack.ts
-├── cluster-stack.ts
-├── payment-dynamodb-stack.ts
-├── payment-receipt-dynamodb-stack.ts
-├── sns-stack.ts            # SNS topic + SQS queues + subscriptions
-├── payment-service-stack.ts
-└── payment-receipt-service-stack.ts
-```
+Shared stack: Spring Cloud AWS (SNS publish, SQS consume, DynamoDB), AWS ECS Fargate (1–10 tasks, auto-scaling), AWS CDK (TypeScript) in `infra/`, LocalStack for local AWS, JUnit 5 + Mockito-Kotlin + Hamcrest + TestContainers for tests.
 
 ---
 
@@ -111,25 +57,32 @@ lib/
 
 ### payment-service (`:8080`)
 
-| Method | Path | Success | Error |
+| Method | Path | Success | Errors |
 |---|---|---|---|
-| `POST` | `/api/payment` | `201 Created` | `422` (validation) |
+| `POST` | `/api/payment` | `201 Created` (+ `Location`) | `400` Bean Validation failure |
 | `GET` | `/api/payment/{id}` | `200 OK` | `404` not found |
-| `DELETE` | `/api/payment/{id}` | `204 No Content` | `422` (processed payments cannot be deleted) |
+| `DELETE` | `/api/payment/{id}` | `204 No Content` | `422` payment is `PROCESSED_PAYMENT`, or does not exist (current behavior) |
 | `GET` | `/actuator/health` | `200 OK` | — |
 
-### payment-receipt-service (`:8082`)
+Request body of `POST /api/payment`:
 
-| Method | Path | Success | Error |
+```json
+{ "date": "2026-10-01", "value": 10.50, "description": "rent", "credit": { "pix_key": "a@b.com" } }
+```
+
+`sk` is `PROCESSED_PAYMENT` when `date` is today, otherwise `SCHEDULED_PAYMENT`.
+
+### payment-receipt-service (`:8080` in AWS, `:8082` with `local` profile)
+
+| Method | Path | Success | Errors |
 |---|---|---|---|
 | `GET` | `/api/payment-receipt/{id}` | `200 OK` | `404` not found |
 | `GET` | `/actuator/health` | `200 OK` | — |
 
-**Error response shape:**
+Both services return unhandled exceptions as `500`. Error response shape:
+
 ```json
-{
-  "errors": [{ "message": "..." }]
-}
+{ "errors": [{ "message": "..." }] }
 ```
 
 ---
@@ -137,21 +90,33 @@ lib/
 ## Event Flow
 
 ```
-PaymentServiceImpl.save()
-  → PaymentEventPublisher → SNS topic: payment-event
-    → SQS: payment-receipt (all events)
-    → SQS: schedule-payment (filter: event_type = SCHEDULED_PAYMENT)
-    → Email: igormgomes94@gmail.com
+POST /api/payment → PaymentServiceImpl.save()
+  → DynamoDB table `payment` (pk = UUID, sk = event type)
+  → PaymentEventPublisher → SNS topic `payment-event` (message attribute: event_type)
+      → SQS `payment-receipt`    (all events)
+      → SQS `schedule-payment`   (CDK filter: event_type = SCHEDULED_PAYMENT;
+                                  docker-compose subscribes without a filter)
+      → e-mail subscription      (address set in infra/lib/sns-stack.ts)
 
-PaymentReceiptConsumer (@SqsListener: payment-receipt)
-  → unwrap SNS envelope (PaymentReceiptSnsRequest)
-  → PaymentReceiptServiceImpl.save()
-  → DynamoDB (payment-receipt table)
+DELETE /api/payment/{id} → publishes DELETED_PAYMENT the same way
+
+PaymentReceiptConsumer (@SqsListener on `payment-receipt`)
+  → unwrap SNS envelope → SavePaymentReceiptUseCase → PaymentReceiptService
+  → PaymentReceiptRepositoryPort → DynamoDB table `payment_receipt`
+     (status DELETED_PAYMENT updates the receipt, any other status saves it)
 ```
+
+Event types: `PROCESSED_PAYMENT`, `SCHEDULED_PAYMENT`, `DELETED_PAYMENT`.
+
+Behavior to know: `PaymentEventPublisher` catches and logs publish failures instead of propagating them, so a payment can be saved without its event being published. The SQS consumer acknowledges a message only after successful processing.
 
 ---
 
 ## Development Workflows
+
+### JDK
+
+Each module needs its own JDK (see the table above). Kotlin 1.8.22 cannot parse newer JDK versions and fails to compile on JDK 25 (`IllegalArgumentException: 25.0.4.1`), so build `payment-service` with JDK 17. On macOS: `JAVA_HOME=$(/usr/libexec/java_home -v 17) ./mvnw ...`.
 
 ### Local development (LocalStack)
 
@@ -159,29 +124,32 @@ PaymentReceiptConsumer (@SqsListener: payment-receipt)
 docker-compose up
 ```
 
-This starts LocalStack and an init container that creates the SNS topic, SQS queues, and DynamoDB tables. Services connect to `http://localhost:4566`.
+Starts LocalStack (`http://localhost:4566`, image `localstack/localstack:latest`, not pinned; the integration tests pin their own versions, see the table above) and a setup container that creates the SNS topic, both SQS queues, the subscriptions and the DynamoDB tables `payment` (pk + sk) and `payment_receipt` (pk).
 
-Run each service with the `local` profile:
+Run each service with the `local` profile (the version in the jar name comes from the pom):
 
 ```bash
 cd payment-service
-./mvnw clean package -DskipTests
+JAVA_HOME=$(/usr/libexec/java_home -v 17) ./mvnw clean package -DskipTests
 java -jar target/payment-service-3.0.3.jar --spring.profiles.active=local
 
 cd payment-receipt-service
-./mvnw clean package -DskipTests
+JAVA_HOME=$(/usr/libexec/java_home -v 25) ./mvnw clean package -DskipTests
 java -jar target/payment-receipt-service-3.0.3.jar --spring.profiles.active=local
 ```
 
 ### Running tests
 
-```bash
-# Unit tests only
-./mvnw test
+Run from the module directory.
 
-# Unit + integration tests (requires Docker for TestContainers)
-./mvnw verify
+```bash
+./mvnw test                          # unit tests (*Test.kt) only
+./mvnw test -Dtest=SomeClassIT       # a specific integration test (requires Docker)
 ```
+
+Surefire's default includes do not match `*IT` and no failsafe plugin is configured, so `./mvnw test` never runs the integration tests; select them with `-Dtest=`.
+
+**Never run `./mvnw verify`, `install` or `deploy`.** Both poms bind `io.fabric8:docker-maven-plugin` to `pre-integration-test` (build + start the image) and `post-integration-test` (**push to `registry.hub.docker.com/igormgomes`**). `package` and `test` are safe.
 
 ### Infrastructure
 
@@ -197,8 +165,8 @@ cdk destroy --all   # tear down all stacks
 ### Docker image build
 
 ```bash
-docker build . -t payment-service:latest
-docker build . -t payment-receipt-service:latest
+docker build . -t payment-service:latest           # from payment-service/
+docker build . -t payment-receipt-service:latest   # from payment-receipt-service/
 ```
 
 ---
@@ -207,184 +175,62 @@ docker build . -t payment-receipt-service:latest
 
 | Profile | Description |
 |---|---|
-| *(default)* | AWS production; uses env vars for topic/queue names |
+| *(default)* | AWS; topic/queue names come from env vars |
 | `local` | LocalStack at `http://localhost:4566` |
-| `integration-test` | TestContainers LocalStack (dynamic port via `@DynamicPropertySource`) |
-
-### Key environment variables
+| `integration-test` | TestContainers LocalStack (dynamic endpoints via `@DynamicPropertySource`) |
 
 | Variable | Used by | Description |
 |---|---|---|
 | `PAYMENT_TOPIC_NAME` | payment-service | SNS topic name |
 | `PAYMENT_RECEIPT_QUEUE_NAME` | payment-receipt-service | SQS queue name |
+| `PORT` | both (`app.sh`) | Passed as `--server.port` |
 
-AWS region defaults to `us-east-1` in both `application.yml` files.
-
----
-
-## Code Conventions
-
-### Package structure
-
-Base package: `br.com.developers`. Domain classes live directly under the feature package (e.g., `br.com.developers.payment`). Exception handlers live in a `handler/` subpackage.
-
-### Service pattern
-
-Always declare a public interface and implement it as an `internal class` with the `Impl` suffix:
-
-```kotlin
-interface PaymentService {
-    fun save(payment: Payment?)
-    fun findById(id: String?): Payment
-}
-
-@Service
-internal class PaymentServiceImpl(
-    private val paymentRepository: PaymentRepository,
-    private val paymentEventPublisher: PaymentEventPublisher
-) : PaymentService { ... }
-```
-
-Use constructor injection everywhere — never `@Autowired` on fields.
-
-### Repositories
-
-Use `@Component` (not `@Repository`) with `DynamoDbTemplate` injected via constructor:
-
-```kotlin
-@Component
-class PaymentRepository(private val dynamoDbTemplate: DynamoDbTemplate) {
-    fun findByPk(id: String): Payment? { ... }
-}
-```
-
-Query with `QueryConditional.keyEqualTo()` and `DynamoDbOperations.query()`.
-
-### DynamoDB entities
-
-```kotlin
-@DynamoDbBean
-data class Payment(
-    @get:DynamoDbPartitionKey var pk: String? = null,
-    var sk: String? = null,
-    var ttl: Long? = null,  // always include TTL (60-minute expiration)
-    ...
-)
-```
-
-- All entity fields must have default values (required by DynamoDB enhanced client)
-- TTL is always included (60-minute window)
-
-### DTOs and mapping
-
-Use data classes with `@JsonProperty` for snake_case JSON keys:
-
-```kotlin
-data class PaymentRequest(
-    @JsonProperty("pix_key_credit") @field:NotBlank val pixKeyCredit: String? = null,
-    @JsonProperty("value") @field:DecimalMin("0.01") val value: BigDecimal? = null,
-)
-```
-
-Provide factory/conversion functions (e.g., `toPayment()`) rather than mapper classes.
-
-### Null safety
-
-Use `checkNotNull()` for nullable parameters that must be non-null at runtime:
-
-```kotlin
-fun findById(id: String?): Payment {
-    checkNotNull(id) { "id must not be null" }
-    ...
-}
-```
-
-### Exception handling
-
-Define custom exceptions as simple classes extending `RuntimeException`. Register handlers in a `@ControllerAdvice` class inside the `handler/` subpackage:
-
-```kotlin
-@ControllerAdvice
-class PaymentExceptionHandler : ResponseEntityExceptionHandler() {
-    @ExceptionHandler(PaymentNotFoundException::class)
-    fun handlePaymentNotFoundException(ex: PaymentNotFoundException): ResponseEntity<ErrorResponse> =
-        ResponseEntity(ErrorResponse(...), HttpStatus.NOT_FOUND)
-}
-```
-
-### Logging
-
-```kotlin
-private val log = LoggerFactory.getLogger(PaymentServiceImpl::class.java)
-log.info("Payment saved ${payment.pk}")
-```
-
-Log at INFO level for business events. Use string templates.
-
-### JSON serialization
-
-`MessageConverterConfiguration` configures a global `ObjectMapper` with:
-- `JavaTimeModule` (LocalDate support)
-- `KotlinModule`
-- `SNAKE_CASE` property naming
-- Non-null serialization only
+In the `local` profile `payment-service` uses the topic ARN `arn:aws:sns:us-east-1:000000000000:payment-event` and `payment-receipt-service` uses queue `payment-receipt`. AWS region defaults to `us-east-1` in both `application.yml` files.
 
 ---
 
-## Testing Conventions
+## Conventions shared by both services
 
-### Unit tests (`*Test.kt`)
+### Deprecated APIs
 
-```kotlin
-@DisplayName("Payment service test")
-@ExtendWith(MockitoExtension::class)
-class PaymentServiceTest {
-    private val paymentRepository: PaymentRepository = mock()
-    private val paymentEventPublisher: PaymentEventPublisher = mock()
-    private lateinit var paymentService: PaymentService
+Never call a class, method, or dependency coordinate marked `@Deprecated` (or documented as deprecated) — check for a current replacement first, especially right after a major-version dependency bump. If a deprecated API is genuinely the only option, call it out explicitly in the response instead of leaving it unmentioned in the diff.
 
-    @BeforeEach
-    fun before() {
-        paymentService = PaymentServiceImpl(paymentRepository, paymentEventPublisher)
-    }
+### Code
 
-    @Test
-    fun `Should save a valid payment`() { ... }
-}
-```
+- Base package `br.com.developers`.
+- Constructor injection only, never `@Autowired` on fields.
+- DynamoDB entities are `@DynamoDbBean` data classes with a default value on every field and a `ttl` (60 minutes, via `ttlOf60Minutes()`).
+- Monetary values are `BigDecimal`.
+- Use `checkNotNull()` for nullable values that must be non-null at runtime.
+- Custom exceptions are mapped in a `@ControllerAdvice` under a `handler/` package, returning the error shape above.
+- Logging: `LoggerFactory.getLogger(javaClass)`, INFO for business events, string templates.
 
-- Mock all dependencies via `mock()` (mockito-kotlin DSL)
-- Instantiate the subject via constructor in `@BeforeEach`
-- Use Hamcrest: `assertThat(result, is(equalTo(expected)))`
-- Use `assertAll {}` for grouping related assertions
-- Use `assertThrows<ExceptionType> { }` for exception paths
-- Use `argumentCaptor<T>()` to verify objects passed to mocks
+### Tests
 
-### Integration tests (`*IT.kt`)
+- Class `<Subject>Test.kt` (unit) or `<Subject>IT.kt` (integration); methods use backtick names: `` `Should do X when Y` ``.
+- Unit tests: `@ExtendWith(MockitoExtension::class)`, dependencies via `mock()` (mockito-kotlin), subject built in `@BeforeEach`, Hamcrest `assertThat(result, is(equalTo(expected)))`, `assertAll {}`, `assertThrows<T> {}`, `argumentCaptor<T>()`.
+- Integration tests: `@Testcontainers`, `@ActiveProfiles("integration-test")`, LocalStack container (`payment-service` maps an `init.sh`; `payment-receipt-service` creates resources with `LocalStackSupport.execAwsLocal(...)`, see its `CLAUDE.md`). Async behavior is asserted with Awaitility (`await().atMost(Duration.ofSeconds(n)).untilAsserted { ... }`) in `payment-receipt-service` only; Awaitility is not a dependency of `payment-service`.
 
-```kotlin
-@Testcontainers
-@ActiveProfiles("integration-test")
-@SqsTest(PaymentReceiptConsumer::class)
-@ImportAutoConfiguration(SqsConfiguration::class, MessageConverterConfiguration::class)
-class PaymentReceiptConsumerIT {
-    @Container
-    private val localStack: LocalStackContainer = LocalStackContainer(DockerImageName.parse("localstack/localstack"))
-        .withClasspathResourceMapping("/localstack/", "/docker-entrypoint-initaws.d", BindMode.READ_ONLY)
-        .withServices(SQS)
+Module-specific details are in each module's `CLAUDE.md`.
 
-    @DynamicPropertySource
-    fun properties(registry: DynamicPropertyRegistry) {
-        registry.add("spring.cloud.aws.sqs.endpoint") { localStack.getEndpointOverride(SQS).toString() }
-    }
-}
-```
+---
 
-- Use `@SqsTest` for focused SQS slice (avoids full Spring context)
-- Init SQS resources in `src/test/resources/localstack/init.sh`
-- Assert async behavior with `await().atMost(5, SECONDS).untilAsserted { ... }`
+## Git workflow
 
-### Test naming
+- Changes go through short-lived branches and pull requests.
+- Commit subjects use a lowercase type prefix, imperative and short: `feature:`, `refactor:`, `test:`, `fix:`, `docs:`.
+- Do not commit personal Claude files: `.claude/settings.local.json` and `CLAUDE.local.md` are git-ignored.
 
-- Class: `<Subject>Test.kt` or `<Subject>IT.kt`
-- Method: Kotlin backtick names — `` `Should do X when Y` ``
+---
+
+## Claude Code agents
+
+Project subagents live in `.claude/agents/`:
+
+| Agent | Purpose |
+|---|---|
+| `code-reviewer` | Reviews changes per module style, payments/messaging risks and tests (read-only) |
+| `infra-reviewer` | Reviews `infra/` CDK and LocalStack consistency (read-only) |
+| `test-writer` | Writes unit/integration tests in the repo's style |
+| `docs-sync` | Keeps `CLAUDE.md` and `README.md` in sync with the code |
+| `commit-organizer` | Groups pending changes into commits with the repo's message style |

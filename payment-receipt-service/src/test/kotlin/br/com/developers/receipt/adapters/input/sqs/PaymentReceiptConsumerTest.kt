@@ -3,7 +3,7 @@ package br.com.developers.receipt.adapters.input.sqs
 import br.com.developers.receipt.application.port.input.SavePaymentReceiptUseCase
 import br.com.developers.receipt.domain.EventType
 import br.com.developers.receipt.domain.PaymentReceipt
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.listener.acknowledgement.Acknowledgement
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.equalTo
