@@ -234,3 +234,7 @@ Project subagents live in `.claude/agents/`:
 | `test-writer` | Writes unit/integration tests in the repo's style |
 | `docs-sync` | Keeps `CLAUDE.md` and `README.md` in sync with the code |
 | `commit-organizer` | Groups pending changes into commits with the repo's message style |
+| `developer` | Fixes production code from a concrete list of findings (no tests, no commits) |
+| `feature-flow` | Orchestrator: `test-writer` → `code-reviewer` → `developer` fixes → repeat (max 3 rounds) until no Crítico/Importante findings |
+
+Run the pipeline on uncommitted changes with `@agent-feature-flow`. It never commits; use `commit-organizer` afterwards.
