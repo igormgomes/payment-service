@@ -3,7 +3,7 @@
 This file documents the codebase for AI assistants working in this repository.
 Module-specific conventions live next to each module:
 
-- `payment-service/CLAUDE.md` — layered REST API
+- `payment-service/CLAUDE.md` — hexagonal REST API
 - `payment-receipt-service/CLAUDE.md` — hexagonal SQS consumer
 
 Claude Code loads a module's file when working inside that directory.
@@ -19,7 +19,8 @@ See `assets/draw.jpg` for the architecture diagram.
 ## Repository Structure
 
 ```
-payment-service/            # REST API microservice (layered)
+payment-service/            # REST API microservice (hexagonal)
+  docs/arq-hex/             # PRD.md and SDD.md for the hexagonal refactoring
 payment-receipt-service/    # SQS consumer + REST query microservice (hexagonal)
   docs/arq-hex/             # PRD.md and SDD.md for the hexagonal design
 infra/                      # AWS CDK infrastructure (TypeScript)
@@ -28,7 +29,7 @@ assets/                     # Architecture diagrams
 .claude/agents/             # Project subagents (see "Claude Code agents")
 ```
 
-The two services are independent Maven projects (each with its own `./mvnw` and `pom.xml`). They deliberately differ in architecture and in framework/JDK versions, so never assume a convention from one applies to the other.
+The two services are independent Maven projects (each with its own `./mvnw` and `pom.xml`). Both use the hexagonal layout, but they deliberately differ in framework/JDK versions, so never assume a version-specific convention from one applies to the other.
 
 ---
 
@@ -37,7 +38,7 @@ The two services are independent Maven projects (each with its own `./mvnw` and 
 | | `payment-service` | `payment-receipt-service` |
 |---|---|---|
 | Role | REST API, publishes events to SNS | Consumes SQS, stores receipts, REST query |
-| Architecture | Layered (controller → service → repository) | Hexagonal (domain / application / adapters) |
+| Architecture | Hexagonal (domain / application / adapters) | Hexagonal (domain / application / adapters) |
 | Kotlin | 1.8.22 | 2.3.21 |
 | JDK to build with | 17 | 25 |
 | Spring Boot | 3.1.1 | 4.1.1 |
@@ -90,9 +91,10 @@ Both services return unhandled exceptions as `500`. Error response shape:
 ## Event Flow
 
 ```
-POST /api/payment → PaymentServiceImpl.save()
-  → DynamoDB table `payment` (pk = UUID, sk = event type)
-  → PaymentEventPublisher → SNS topic `payment-event` (message attribute: event_type)
+POST /api/payment → PaymentController → SavePaymentUseCase (PaymentService)
+  → PaymentRepositoryPort → DynamoDB table `payment` (pk = UUID, sk = event type)
+  → PaymentEventPublisherPort (PaymentEventSnsAdapter) → SNS topic `payment-event`
+     body: {"payload": {id, event_type, date, pix_key_credit}, "headers": {event_type, id, timestamp}}
       → SQS `payment-receipt`    (all events)
       → SQS `schedule-payment`   (CDK filter: event_type = SCHEDULED_PAYMENT;
                                   docker-compose subscribes without a filter)
@@ -108,7 +110,9 @@ PaymentReceiptConsumer (@SqsListener on `payment-receipt`)
 
 Event types: `PROCESSED_PAYMENT`, `SCHEDULED_PAYMENT`, `DELETED_PAYMENT`.
 
-Behavior to know: `PaymentEventPublisher` catches and logs publish failures instead of propagating them, so a payment can be saved without its event being published. The SQS consumer acknowledges a message only after successful processing.
+Behavior to know: `PaymentEventSnsAdapter` catches and logs publish failures instead of propagating them, so a payment can be saved without its event being published. The SQS consumer acknowledges a message only after successful processing.
+
+The adapter passes a Spring `Message` to `SnsTemplate.convertAndSend`, which serializes the whole message, so the topic body is the `{payload, headers}` shape above (not the bare event) and `payment-receipt-service` reads `payload` from it. On LocalStack the subscribed queue receives no SNS message attribute; `event_type` travels only inside `headers`. The CDK filter policy on `event_type` (`schedule-payment` queue) matches message attributes, so confirm it against real AWS. `payment-service`'s `PaymentEventIT` fixes the published shape.
 
 ---
 
@@ -209,7 +213,7 @@ Never call a class, method, or dependency coordinate marked `@Deprecated` (or do
 
 - Class `<Subject>Test.kt` (unit) or `<Subject>IT.kt` (integration); methods use backtick names: `` `Should do X when Y` ``.
 - Unit tests: `@ExtendWith(MockitoExtension::class)`, dependencies via `mock()` (mockito-kotlin), subject built in `@BeforeEach`, Hamcrest `assertThat(result, is(equalTo(expected)))`, `assertAll {}`, `assertThrows<T> {}`, `argumentCaptor<T>()`.
-- Integration tests: `@Testcontainers`, `@ActiveProfiles("integration-test")`, LocalStack container (`payment-service` maps an `init.sh`; `payment-receipt-service` creates resources with `LocalStackSupport.execAwsLocal(...)`, see its `CLAUDE.md`). Async behavior is asserted with Awaitility (`await().atMost(Duration.ofSeconds(n)).untilAsserted { ... }`) in `payment-receipt-service` only; Awaitility is not a dependency of `payment-service`.
+- Integration tests: `@Testcontainers`, `@ActiveProfiles("integration-test")`, LocalStack container per IT class, with the resources created in the class through `execAwsLocal(...)` (a `LocalStackSupport.kt` helper in each module; see each module's `CLAUDE.md`). Async behavior is asserted with Awaitility (`await().atMost(Duration.ofSeconds(n)).untilAsserted { ... }`) in `payment-receipt-service` only; Awaitility is not a dependency of `payment-service`.
 
 Module-specific details are in each module's `CLAUDE.md`.
 
