@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(*mvn* verify*)",
+      "Bash(*mvn* install*)",
+      "Bash(*mvn* deploy*)",
+      "Bash(*docker:push*)",
+      "Bash(docker push *)"
+    ]
+  }
+}

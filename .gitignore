@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Claude Code (personal files; .claude/agents, .claude/settings.json and CLAUDE.md stay versioned) ###
+.claude/settings.local.json
+CLAUDE.local.md
